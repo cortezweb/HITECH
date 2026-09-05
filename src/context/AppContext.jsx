@@ -8,6 +8,7 @@ import {
   updateDoc,
   deleteDoc
 } from 'firebase/firestore';
+import { supabase, isSupabaseConfigured } from '../config/supabase';
 
 const AppContext = createContext();
 
@@ -248,6 +249,9 @@ export const AppProvider = ({ children }) => {
       date: new Date().toLocaleString('es-ES'),
       timestamp: Date.now()
     };
+    if (isSupabaseConfigured && supabase) {
+      supabase.from('activity_logs').insert(newLog).catch(console.warn);
+    }
     try {
       await setDoc(doc(db, 'activity_logs', logId), newLog);
     } catch (e) {
@@ -315,6 +319,9 @@ export const AppProvider = ({ children }) => {
       avatar: userData.avatar || `https://images.unsplash.com/photo-${['1535713875002-d1d0cf377fde', '1570295999919-56ceb5ecca61', '1494790108377-be9c29b29330'][Math.floor(Math.random() * 3)]}?auto=format&fit=crop&w=80&q=80`,
       date: new Date().toLocaleDateString('es-ES')
     };
+    if (isSupabaseConfigured && supabase) {
+      supabase.from('users').insert(newUser).catch(console.warn);
+    }
     try {
       await setDoc(doc(db, 'users', userId), newUser);
       logActivity('Crear Usuario', `Se creó el usuario ${newUser.name} con rol ${newUser.role}.`);
@@ -324,6 +331,9 @@ export const AppProvider = ({ children }) => {
   };
 
   const updateUser = async (userId, fields) => {
+    if (isSupabaseConfigured && supabase) {
+      supabase.from('users').update(fields).eq('id', userId).catch(console.warn);
+    }
     try {
       await setDoc(doc(db, 'users', userId), fields, { merge: true });
       const matched = users.find(u => u.id === userId);
@@ -336,6 +346,9 @@ export const AppProvider = ({ children }) => {
 
   const deleteUser = async (userId) => {
     const matched = users.find(u => u.id === userId);
+    if (isSupabaseConfigured && supabase) {
+      supabase.from('users').delete().eq('id', userId).catch(console.warn);
+    }
     try {
       await deleteDoc(doc(db, 'users', userId));
       logActivity('Eliminar Usuario', `Se eliminó el usuario ${matched ? matched.name : userId}.`);
@@ -346,6 +359,9 @@ export const AppProvider = ({ children }) => {
 
   const updateRolePermissions = async (role, windowIds) => {
     const updatedPermissions = { ...rolePermissions, [role]: windowIds };
+    if (isSupabaseConfigured && supabase) {
+      supabase.from('config').upsert({ id: 'rolePermissions', data: updatedPermissions }).catch(console.warn);
+    }
     try {
       await setDoc(doc(db, 'config', 'rolePermissions'), updatedPermissions);
       logActivity('Actualizar Permisos', `Se actualizaron los accesos del rol: ${role}.`);
@@ -356,6 +372,9 @@ export const AppProvider = ({ children }) => {
   };
 
   const updateShopInfo = async (info) => {
+    if (isSupabaseConfigured && supabase) {
+      supabase.from('config').upsert({ id: 'shopInfo', data: info }).catch(console.warn);
+    }
     try {
       await setDoc(doc(db, 'config', 'shopInfo'), info);
       logActivity('Actualizar Empresa', 'Se actualizaron los datos comerciales de la empresa.');
@@ -378,6 +397,9 @@ export const AppProvider = ({ children }) => {
       time: new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
       timestamp: Date.now()
     };
+    if (isSupabaseConfigured && supabase) {
+      supabase.from('attendance').insert(newRecord).catch(console.warn);
+    }
     try {
       await setDoc(doc(db, 'attendance', logId), newRecord);
       logActivity('Reloj Checador', `${name} registró ingreso (Entrada).`, name);
@@ -398,6 +420,9 @@ export const AppProvider = ({ children }) => {
       time: new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
       timestamp: Date.now()
     };
+    if (isSupabaseConfigured && supabase) {
+      supabase.from('attendance').insert(newRecord).catch(console.warn);
+    }
     try {
       await setDoc(doc(db, 'attendance', logId), newRecord);
       logActivity('Reloj Checador', `${name} registró egreso (Salida).`, name);
@@ -415,6 +440,9 @@ export const AppProvider = ({ children }) => {
       timestamp: Date.now(),
       date: new Date().toLocaleString('es-ES')
     };
+    if (isSupabaseConfigured && supabase) {
+      supabase.from('cierres_caja').insert(record).catch(console.warn);
+    }
     try {
       await setDoc(doc(db, 'cierres_caja', cierreId), record);
       setLastClosingTimestamp(record.timestamp);
@@ -426,6 +454,9 @@ export const AppProvider = ({ children }) => {
 
   // Return/Anulacion de venta
   const returnSale = async (saleId) => {
+    if (isSupabaseConfigured && supabase) {
+      supabase.from('sales').delete().eq('id', saleId).catch(console.warn);
+    }
     try {
       await deleteDoc(doc(db, 'sales', saleId));
       logActivity('Devolución de Venta', `Se anuló/devolvió la venta ${saleId}.`);
@@ -658,6 +689,116 @@ export const AppProvider = ({ children }) => {
     };
   }, []);
 
+  // Supabase Initial Fetch & Realtime Subscriptions
+  useEffect(() => {
+    if (!isSupabaseConfigured || !supabase) return;
+
+    // 1. Fetch initial data from Supabase PostgreSQL
+    const fetchSupabaseData = async () => {
+      try {
+        const [
+          { data: prods },
+          { data: tix },
+          { data: sls },
+          { data: usrs },
+          { data: cfg },
+          { data: logs },
+          { data: att },
+          { data: closings }
+        ] = await Promise.all([
+          supabase.from('products').select('*'),
+          supabase.from('tickets').select('*'),
+          supabase.from('sales').select('*'),
+          supabase.from('users').select('*'),
+          supabase.from('config').select('*'),
+          supabase.from('activity_logs').select('*').order('timestamp', { ascending: false }).limit(100),
+          supabase.from('attendance').select('*').order('timestamp', { ascending: false }).limit(100),
+          supabase.from('cierres_caja').select('*').order('timestamp', { ascending: false }).limit(20)
+        ]);
+
+        if (prods && prods.length > 0) setProducts(prods);
+        if (tix && tix.length > 0) setTickets(tix.sort((a, b) => b.id.localeCompare(a.id)));
+        if (sls && sls.length > 0) setSales(sls);
+        if (usrs && usrs.length > 0) setUsers(usrs);
+        if (logs && logs.length > 0) setActivityLogs(logs);
+        if (att && att.length > 0) setAttendanceLogs(att);
+        if (closings && closings.length > 0) setLastClosingTimestamp(closings[0].timestamp);
+
+        if (cfg) {
+          cfg.forEach(row => {
+            if (row.id === 'rolePermissions' && row.data) {
+              setRolePermissions(row.data);
+            } else if (row.id === 'shopInfo' && row.data) {
+              setShopInfo(row.data);
+            }
+          });
+        }
+      } catch (err) {
+        console.warn('Error al cargar datos iniciales desde Supabase:', err);
+      }
+    };
+
+    fetchSupabaseData();
+
+    // 2. Realtime Subscriptions for live collaboration
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, (payload) => {
+        if (payload.eventType === 'INSERT') {
+          setProducts(prev => [payload.new, ...prev.filter(p => p.id !== payload.new.id)]);
+        } else if (payload.eventType === 'UPDATE') {
+          setProducts(prev => prev.map(p => p.id === payload.new.id ? payload.new : p));
+        } else if (payload.eventType === 'DELETE') {
+          setProducts(prev => prev.filter(p => p.id !== payload.old.id));
+        }
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'tickets' }, (payload) => {
+        if (payload.eventType === 'INSERT') {
+          setTickets(prev => [payload.new, ...prev.filter(t => t.id !== payload.new.id)].sort((a, b) => b.id.localeCompare(a.id)));
+        } else if (payload.eventType === 'UPDATE') {
+          setTickets(prev => prev.map(t => t.id === payload.new.id ? payload.new : t));
+        } else if (payload.eventType === 'DELETE') {
+          setTickets(prev => prev.filter(t => t.id !== payload.old.id));
+        }
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'sales' }, (payload) => {
+        if (payload.eventType === 'INSERT') {
+          setSales(prev => [payload.new, ...prev.filter(s => s.id !== payload.new.id)]);
+        } else if (payload.eventType === 'DELETE') {
+          setSales(prev => prev.filter(s => s.id !== payload.old.id));
+        }
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'users' }, (payload) => {
+        if (payload.eventType === 'INSERT') {
+          setUsers(prev => [...prev.filter(u => u.id !== payload.new.id), payload.new]);
+        } else if (payload.eventType === 'UPDATE') {
+          setUsers(prev => prev.map(u => u.id === payload.new.id ? payload.new : u));
+        } else if (payload.eventType === 'DELETE') {
+          setUsers(prev => prev.filter(u => u.id !== payload.old.id));
+        }
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'config' }, (payload) => {
+        if (payload.new) {
+          if (payload.new.id === 'rolePermissions' && payload.new.data) setRolePermissions(payload.new.data);
+          if (payload.new.id === 'shopInfo' && payload.new.data) setShopInfo(payload.new.data);
+        }
+      })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'activity_logs' }, (payload) => {
+        setActivityLogs(prev => [payload.new, ...prev]);
+      })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'attendance' }, (payload) => {
+        setAttendanceLogs(prev => [payload.new, ...prev]);
+      })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'cierres_caja' }, (payload) => {
+        setLastClosingTimestamp(payload.new.timestamp);
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
   // POS Cart State
   const [cart, setCart] = useState([]);
 
@@ -722,6 +863,9 @@ export const AppProvider = ({ children }) => {
     };
     
     try {
+      if (isSupabaseConfigured && supabase) {
+        supabase.from('sales').insert(receipt).catch(console.warn);
+      }
       await setDoc(doc(db, 'sales', receiptId), receipt);
       logActivity('Venta POS', `Venta completada ${receiptId} por $${total.toFixed(2)}.`);
 
@@ -757,6 +901,9 @@ export const AppProvider = ({ children }) => {
             }
             
             await updateServiceTicket(ticketId, ticket.status, timelineMsg);
+            if (isSupabaseConfigured && supabase) {
+              supabase.from('tickets').update(updateFields).eq('id', ticketId).catch(console.warn);
+            }
             await updateDoc(doc(db, 'tickets', ticketId), updateFields);
           }
         }
@@ -768,6 +915,12 @@ export const AppProvider = ({ children }) => {
           const newStock = Math.max(0, prod.stock - cartItem.qty);
           const newStatus = newStock === 0 ? 'Out of Stock' : (newStock < 15 ? 'Low Stock' : 'In Stock');
           
+          if (isSupabaseConfigured && supabase) {
+            supabase.from('products').update({
+              stock: newStock,
+              status: newStatus
+            }).eq('id', cartItem.id).catch(console.warn);
+          }
           await updateDoc(doc(db, 'products', cartItem.id), {
             stock: newStock,
             status: newStatus
@@ -861,7 +1014,7 @@ export const AppProvider = ({ children }) => {
     setSubstate('pos', 'moderno');
   };
 
-  // Add inventory product directly to Cloud Firestore
+  // Add inventory product directly to Cloud Firestore & Supabase
   const addInventoryProduct = async (product) => {
     const productId = `SKU-${Math.floor(1000 + Math.random() * 9000)}-${product.category.substring(0, 1).toUpperCase()}`;
     const newProd = {
@@ -877,6 +1030,9 @@ export const AppProvider = ({ children }) => {
       image: product.image || 'https://images.unsplash.com/photo-1531403009284-440f080d1e12?auto=format&fit=crop&w=150&q=80'
     };
 
+    if (isSupabaseConfigured && supabase) {
+      supabase.from('products').insert(newProd).catch(console.warn);
+    }
     try {
       await setDoc(doc(db, 'products', productId), newProd);
       logActivity('Añadir Producto', `Se añadió el producto SKU ${newProd.id} (${newProd.name}) al inventario.`);
@@ -885,7 +1041,7 @@ export const AppProvider = ({ children }) => {
     }
   };
 
-  // Add service ticket directly to Cloud Firestore
+  // Add service ticket directly to Cloud Firestore & Supabase
   const addServiceTicket = async (ticketData) => {
     const newId = ticketData.id || `WO-${Math.floor(1000 + Math.random() * 9000)}`;
     const ticket = {
@@ -897,6 +1053,7 @@ export const AppProvider = ({ children }) => {
       price: parseFloat(ticketData.estimate) || 0,
       advancePayment: parseFloat(ticketData.advancePayment) || 0,
       advancePaid: (parseFloat(ticketData.advancePayment) || 0) > 0 ? false : true,
+      balancePaid: false,
       fullyPaid: false,
       paymentHistory: [],
       date: ticketData.date || new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' }) + `, ${new Date().getHours()}:${new Date().getMinutes()}`,
@@ -909,6 +1066,9 @@ export const AppProvider = ({ children }) => {
       ]
     };
 
+    if (isSupabaseConfigured && supabase) {
+      supabase.from('tickets').insert(ticket).catch(console.warn);
+    }
     try {
       await setDoc(doc(db, 'tickets', newId), ticket);
       setLastCreatedTicket(ticket);
@@ -919,7 +1079,7 @@ export const AppProvider = ({ children }) => {
     }
   };
 
-  // Update service ticket timeline and status in Cloud Firestore
+  // Update service ticket timeline and status in Cloud Firestore & Supabase
   const updateServiceTicket = async (ticketId, newStatus, newTimelineEvent, assignedTech = null) => {
     const ticket = tickets.find(t => t.id === ticketId);
     if (!ticket) return;
@@ -941,6 +1101,9 @@ export const AppProvider = ({ children }) => {
       updateFields.assignedTech = assignedTech;
     }
 
+    if (isSupabaseConfigured && supabase) {
+      supabase.from('tickets').update(updateFields).eq('id', ticketId).catch(console.warn);
+    }
     try {
       await updateDoc(doc(db, 'tickets', ticketId), updateFields);
       logActivity('Actualizar Ticket', `Se actualizó el ticket ${ticketId} a estado ${newStatus}.`);
