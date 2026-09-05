@@ -1,0 +1,121 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+
+  /* Custom HITECH theme colors */
+  --color-primary: #0052ff;
+  --color-primary-fixed: #e1e0ff;
+  --color-primary-fixed-dim: #c0c1ff;
+  --color-on-primary: #ffffff;
+  --color-on-primary-fixed: #06006c;
+  --color-on-primary-fixed-variant: #3738a1;
+  --color-primary-container: #5c5fc8;
+  --color-on-primary-container: #edeaff;
+  
+  --color-secondary: #4648d4;
+  --color-secondary-fixed: #e1e0ff;
+  --color-secondary-fixed-dim: #c0c1ff;
+  --color-on-secondary: #ffffff;
+  --color-on-secondary-fixed: #07006c;
+  --color-on-secondary-fixed-variant: #2f2ebe;
+  --color-secondary-container: #6063ee;
+  --color-on-secondary-container: #fffbff;
+  
+  --color-tertiary: #4e5357;
+  --color-tertiary-fixed: #dfe3e8;
+  --color-tertiary-fixed-dim: #c3c7cc;
+  --color-on-tertiary: #ffffff;
+  --color-on-tertiary-fixed: #171c20;
+  --color-on-tertiary-fixed-variant: #42474b;
+  --color-tertiary-container: #666b70;
+  --color-on-tertiary-container: #e9edf2;
+  
+  --color-background: #f9f9ff;
+  --color-on-background: #111c2d;
+  
+  --color-surface: #f9f9ff;
+  --color-on-surface: #111c2d;
+  --color-surface-dim: #cfdaf2;
+  --color-surface-bright: #f9f9ff;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #f0f3ff;
+  --color-surface-container: #e7eeff;
+  --color-surface-container-high: #dee8ff;
+  --color-surface-container-highest: #d8e3fb;
+  --color-surface-variant: #d8e3fb;
+  --color-on-surface-variant: #464652;
+  --color-surface-tint: #4f52ba;
+  --color-inverse-surface: #263143;
+  --color-inverse-on-surface: #ecf1ff;
+  --color-inverse-primary: #c0c1ff;
+  
+  --color-outline: #777684;
+  --color-outline-variant: #c7c5d5;
+  
+  --color-error: #ba1a1a;
+  --color-on-error: #ffffff;
+  --color-error-container: #ffdad6;
+  --color-on-error-container: #93000a;
+  
+  --spacing-card-padding: 24px;
+  --spacing-max-content-width: 1440px;
+  --spacing-margin-page: 32px;
+  --spacing-unit: 4px;
+  --spacing-gutter: 24px;
+  --spacing-sidebar-width: 88px;
+}
+
+@layer utilities {
+  .material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    display: inline-block;
+    vertical-align: middle;
+    line-height: 1;
+  }
+  
+  .glass {
+    background: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+}
+
+/* Custom scrollbar for clean UI */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #d8e3fb;
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #c7c5d5;
+}
+
+/* High-fidelity printer styling for thermal receipts */
+@media print {
+  @page {
+    size: auto;
+    margin: 5mm;
+  }
+  
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Hide scrollbars during print */
+  ::-webkit-scrollbar {
+    display: none !important;
+  }
+}
