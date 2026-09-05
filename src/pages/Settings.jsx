@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { db } from '../config/firebase';
-import { doc, setDoc } from 'firebase/firestore';
 
 export default function Settings() {
   const {

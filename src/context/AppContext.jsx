@@ -1,13 +1,4 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import { db } from '../config/firebase';
-import { 
-  collection, 
-  onSnapshot, 
-  doc, 
-  setDoc, 
-  updateDoc,
-  deleteDoc
-} from 'firebase/firestore';
 import { supabase, isSupabaseConfigured } from '../config/supabase';
 
 const AppContext = createContext();
@@ -188,13 +179,17 @@ export const AppProvider = ({ children }) => {
     setSubstates(prev => ({ ...prev, [pageName]: value }));
   };
 
-  // State arrays driven by Firebase Firestore
-  const [products, setProducts] = useState([]);
-  const [tickets, setTickets] = useState([]);
+  // State arrays driven by Supabase (with offline initial mock fallbacks)
+  const [products, setProducts] = useState(initialMockProducts);
+  const [tickets, setTickets] = useState(initialMockTickets);
   const [sales, setSales] = useState([]);
 
   // Custom Settings, Users and Audit states
-  const [users, setUsers] = useState([]);
+  const [users, setUsers] = useState([
+    { id: 'usr-1', email: 'admin@sistech.com', password: 'admin123', name: 'Alex Sterling', role: 'admin', status: 'active', avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80', date: '24/06/2026' },
+    { id: 'usr-2', email: 'cajero@sistech.com', password: 'cajero123', name: 'Hamilton Cortez', role: 'cajero', status: 'active', avatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=80&q=80', date: '24/06/2026' },
+    { id: 'usr-3', email: 'tecnico@sistech.com', password: 'tecnico123', name: 'Deanna Annis', role: 'tecnico', status: 'active', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=80&q=80', date: '24/06/2026' }
+  ]);
   const [rolePermissions, setRolePermissions] = useState({
     admin: ['dashboard', 'service_registry', 'pos', 'inventory', 'reports', 'settings'],
     cajero: ['dashboard', 'pos'],
@@ -252,12 +247,7 @@ export const AppProvider = ({ children }) => {
     if (isSupabaseConfigured && supabase) {
       supabase.from('activity_logs').insert(newLog).catch(console.warn);
     }
-    try {
-      await setDoc(doc(db, 'activity_logs', logId), newLog);
-    } catch (e) {
-      console.warn('Fallback local para bitácora de auditoría:', e);
-      setActivityLogs(prev => [newLog, ...prev]);
-    }
+    setActivityLogs(prev => [newLog, ...prev]);
   };
 
   const login = (email, password) => {
@@ -322,26 +312,18 @@ export const AppProvider = ({ children }) => {
     if (isSupabaseConfigured && supabase) {
       supabase.from('users').insert(newUser).catch(console.warn);
     }
-    try {
-      await setDoc(doc(db, 'users', userId), newUser);
-      logActivity('Crear Usuario', `Se creó el usuario ${newUser.name} con rol ${newUser.role}.`);
-    } catch (e) {
-      console.error('Error al agregar usuario:', e);
-    }
+    setUsers(prev => [...prev, newUser]);
+    logActivity('Crear Usuario', `Se creó el usuario ${newUser.name} con rol ${newUser.role}.`);
   };
 
   const updateUser = async (userId, fields) => {
     if (isSupabaseConfigured && supabase) {
       supabase.from('users').update(fields).eq('id', userId).catch(console.warn);
     }
-    try {
-      await setDoc(doc(db, 'users', userId), fields, { merge: true });
-      const matched = users.find(u => u.id === userId);
-      const name = matched ? matched.name : userId;
-      logActivity('Editar Usuario', `Se modificó el usuario ${name} (ID: ${userId}).`);
-    } catch (e) {
-      console.error('Error al actualizar usuario:', e);
-    }
+    setUsers(prev => prev.map(u => u.id === userId ? { ...u, ...fields } : u));
+    const matched = users.find(u => u.id === userId);
+    const name = matched ? matched.name : userId;
+    logActivity('Editar Usuario', `Se modificó el usuario ${name} (ID: ${userId}).`);
   };
 
   const deleteUser = async (userId) => {
@@ -349,12 +331,8 @@ export const AppProvider = ({ children }) => {
     if (isSupabaseConfigured && supabase) {
       supabase.from('users').delete().eq('id', userId).catch(console.warn);
     }
-    try {
-      await deleteDoc(doc(db, 'users', userId));
-      logActivity('Eliminar Usuario', `Se eliminó el usuario ${matched ? matched.name : userId}.`);
-    } catch (e) {
-      console.error('Error al eliminar usuario:', e);
-    }
+    setUsers(prev => prev.filter(u => u.id !== userId));
+    logActivity('Eliminar Usuario', `Se eliminó el usuario ${matched ? matched.name : userId}.`);
   };
 
   const updateRolePermissions = async (role, windowIds) => {
@@ -362,26 +340,16 @@ export const AppProvider = ({ children }) => {
     if (isSupabaseConfigured && supabase) {
       supabase.from('config').upsert({ id: 'rolePermissions', data: updatedPermissions }).catch(console.warn);
     }
-    try {
-      await setDoc(doc(db, 'config', 'rolePermissions'), updatedPermissions);
-      logActivity('Actualizar Permisos', `Se actualizaron los accesos del rol: ${role}.`);
-    } catch (e) {
-      console.error('Error al actualizar permisos:', e);
-      setRolePermissions(updatedPermissions);
-    }
+    setRolePermissions(updatedPermissions);
+    logActivity('Actualizar Permisos', `Se actualizaron los accesos del rol: ${role}.`);
   };
 
   const updateShopInfo = async (info) => {
     if (isSupabaseConfigured && supabase) {
       supabase.from('config').upsert({ id: 'shopInfo', data: info }).catch(console.warn);
     }
-    try {
-      await setDoc(doc(db, 'config', 'shopInfo'), info);
-      logActivity('Actualizar Empresa', 'Se actualizaron los datos comerciales de la empresa.');
-    } catch (e) {
-      console.error('Error al actualizar datos comerciales:', e);
-      setShopInfo(info);
-    }
+    setShopInfo(info);
+    logActivity('Actualizar Empresa', 'Se actualizaron los datos comerciales de la empresa.');
   };
 
   // Clock In and Clock Out attendance records
@@ -400,12 +368,8 @@ export const AppProvider = ({ children }) => {
     if (isSupabaseConfigured && supabase) {
       supabase.from('attendance').insert(newRecord).catch(console.warn);
     }
-    try {
-      await setDoc(doc(db, 'attendance', logId), newRecord);
-      logActivity('Reloj Checador', `${name} registró ingreso (Entrada).`, name);
-    } catch (e) {
-      console.error('Error al registrar entrada:', e);
-    }
+    setAttendanceLogs(prev => [newRecord, ...prev]);
+    logActivity('Reloj Checador', `${name} registró ingreso (Entrada).`, name);
   };
 
   const clockOutUser = async (userId, name, role) => {
@@ -423,12 +387,8 @@ export const AppProvider = ({ children }) => {
     if (isSupabaseConfigured && supabase) {
       supabase.from('attendance').insert(newRecord).catch(console.warn);
     }
-    try {
-      await setDoc(doc(db, 'attendance', logId), newRecord);
-      logActivity('Reloj Checador', `${name} registró egreso (Salida).`, name);
-    } catch (e) {
-      console.error('Error al registrar salida:', e);
-    }
+    setAttendanceLogs(prev => [newRecord, ...prev]);
+    logActivity('Reloj Checador', `${name} registró egreso (Salida).`, name);
   };
 
   // Arqueo / Cierre Z
@@ -443,13 +403,8 @@ export const AppProvider = ({ children }) => {
     if (isSupabaseConfigured && supabase) {
       supabase.from('cierres_caja').insert(record).catch(console.warn);
     }
-    try {
-      await setDoc(doc(db, 'cierres_caja', cierreId), record);
-      setLastClosingTimestamp(record.timestamp);
-      logActivity('Cierre de Caja', `Cierre Z definitivo realizado por ${cierreData.cajero}. Total Efectivo: $${cierreData.efectivoReal.toFixed(2)}.`);
-    } catch (e) {
-      console.error('Error al guardar cierre de caja:', e);
-    }
+    setLastClosingTimestamp(record.timestamp);
+    logActivity('Cierre de Caja', `Cierre Z definitivo realizado por ${cierreData.cajero}. Total Efectivo: $${cierreData.efectivoReal.toFixed(2)}.`);
   };
 
   // Return/Anulacion de venta
@@ -457,13 +412,8 @@ export const AppProvider = ({ children }) => {
     if (isSupabaseConfigured && supabase) {
       supabase.from('sales').delete().eq('id', saleId).catch(console.warn);
     }
-    try {
-      await deleteDoc(doc(db, 'sales', saleId));
-      logActivity('Devolución de Venta', `Se anuló/devolvió la venta ${saleId}.`);
-    } catch (e) {
-      console.error('Error al devolver la venta:', e);
-      setSales(prev => prev.filter(s => s.id !== saleId));
-    }
+    setSales(prev => prev.filter(s => s.id !== saleId));
+    logActivity('Devolución de Venta', `Se anuló/devolvió la venta ${saleId}.`);
   };
 
   // Static Team and Tasks state
@@ -480,214 +430,6 @@ export const AppProvider = ({ children }) => {
     { date: '24 Nov 2024', desc: 'Technician debriefing', urgent: false },
     { date: '24 Nov 2024', desc: 'Inventory audit report', urgent: false }
   ]);
-
-  // Firestore Listeners & Database Seeding
-  useEffect(() => {
-    // 1. Listen and seed Products
-    const unsubProducts = onSnapshot(
-      collection(db, 'products'),
-      (snapshot) => {
-        if (snapshot.empty) {
-          initialMockProducts.forEach(async (product) => {
-            try {
-              await setDoc(doc(db, 'products', product.id), product);
-            } catch (e) {
-              console.error('Failed to seed product:', e);
-            }
-          });
-        } else {
-          const prodList = [];
-          snapshot.forEach((d) => {
-            prodList.push(d.data());
-          });
-          setProducts(prodList);
-        }
-      },
-      (error) => {
-        console.warn('Firestore products listener blocked/failed (using local fallback):', error);
-        setProducts(initialMockProducts);
-      }
-    );
-
-    // 2. Listen and seed Service Tickets
-    const unsubTickets = onSnapshot(
-      collection(db, 'tickets'),
-      (snapshot) => {
-        if (snapshot.empty) {
-          initialMockTickets.forEach(async (ticket) => {
-            try {
-              await setDoc(doc(db, 'tickets', ticket.id), ticket);
-            } catch (e) {
-              console.error('Failed to seed ticket:', e);
-            }
-          });
-        } else {
-          const ticketList = [];
-          snapshot.forEach((d) => {
-            ticketList.push(d.data());
-          });
-          ticketList.sort((a, b) => b.id.localeCompare(a.id));
-          setTickets(ticketList);
-        }
-      },
-      (error) => {
-        console.warn('Firestore tickets listener blocked/failed (using local fallback):', error);
-        setTickets(initialMockTickets);
-      }
-    );
-
-    // 3. Listen to Sales Receipts (needed for Dashboard charts)
-    const unsubSales = onSnapshot(
-      collection(db, 'sales'),
-      (snapshot) => {
-        const salesList = [];
-        snapshot.forEach((d) => {
-          salesList.push(d.data());
-        });
-        setSales(salesList);
-      },
-      (error) => {
-        console.warn('Firestore sales listener blocked/failed (using local fallback):', error);
-        setSales([]);
-      }
-    );
-
-    // 4. Listen and seed Users
-    const unsubUsers = onSnapshot(
-      collection(db, 'users'),
-      (snapshot) => {
-        if (snapshot.empty) {
-          const initialMockUsers = [
-            { id: 'usr-1', email: 'admin@sistech.com', password: 'admin123', name: 'Alex Sterling', role: 'admin', status: 'active', avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80', date: new Date().toLocaleDateString('es-ES') },
-            { id: 'usr-2', email: 'cajero@sistech.com', password: 'cajero123', name: 'Hamilton Cortez', role: 'cajero', status: 'active', avatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=80&q=80', date: new Date().toLocaleDateString('es-ES') },
-            { id: 'usr-3', email: 'tecnico@sistech.com', password: 'tecnico123', name: 'Deanna Annis', role: 'tecnico', status: 'active', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=80&q=80', date: new Date().toLocaleDateString('es-ES') }
-          ];
-          initialMockUsers.forEach(async (usr) => {
-            try {
-              await setDoc(doc(db, 'users', usr.id), usr);
-            } catch (e) {
-              console.error('Failed to seed user:', e);
-            }
-          });
-        } else {
-          const usrList = [];
-          snapshot.forEach((d) => {
-            usrList.push(d.data());
-          });
-          setUsers(usrList);
-        }
-      },
-      (error) => {
-        console.warn('Firestore users listener blocked/failed:', error);
-        setUsers([
-          { id: 'usr-1', email: 'admin@sistech.com', password: 'admin123', name: 'Alex Sterling', role: 'admin', status: 'active', avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80', date: '24/06/2026' },
-          { id: 'usr-2', email: 'cajero@sistech.com', password: 'cajero123', name: 'Hamilton Cortez', role: 'cajero', status: 'active', avatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=80&q=80', date: '24/06/2026' },
-          { id: 'usr-3', email: 'tecnico@sistech.com', password: 'tecnico123', name: 'Deanna Annis', role: 'tecnico', status: 'active', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=80&q=80', date: '24/06/2026' }
-        ]);
-      }
-    );
-
-    // 5. Listen and seed Config
-    const unsubConfig = onSnapshot(
-      collection(db, 'config'),
-      (snapshot) => {
-        if (snapshot.empty) {
-          setDoc(doc(db, 'config', 'rolePermissions'), {
-            admin: ['dashboard', 'service_registry', 'pos', 'inventory', 'reports', 'settings'],
-            cajero: ['dashboard', 'pos'],
-            tecnico: ['dashboard', 'service_registry']
-          });
-          setDoc(doc(db, 'config', 'shopInfo'), {
-            name: 'HITECH POS',
-            ruc: '20748392018',
-            address: 'Av. Aviación 1482, San Borja',
-            phone: '(01) 224-8594 / 942-597-869',
-            warranty: 'Garantía de servicio: 30 días en mano de obra. No cubre daños físicos ni líquidos.',
-            weatherLocation: 'Lima, PE'
-          });
-        } else {
-          snapshot.forEach((d) => {
-            if (d.id === 'rolePermissions') {
-              const perms = d.data();
-              if (perms.admin && !perms.admin.includes('reports')) {
-                perms.admin.push('reports');
-                setDoc(doc(db, 'config', 'rolePermissions'), perms, { merge: true }).catch(err =>
-                  console.warn('Fallo al auto-reparar permisos de reporte en Firestore:', err)
-                );
-              }
-              setRolePermissions(perms);
-            } else if (d.id === 'shopInfo') {
-              setShopInfo(d.data());
-            }
-          });
-        }
-      },
-      (error) => {
-        console.warn('Firestore config listener blocked/failed:', error);
-      }
-    );
-
-    // 6. Listen activity logs
-    const unsubLogs = onSnapshot(
-      collection(db, 'activity_logs'),
-      (snapshot) => {
-        const logList = [];
-        snapshot.forEach((d) => {
-          logList.push(d.data());
-        });
-        logList.sort((a, b) => b.timestamp - a.timestamp);
-        setActivityLogs(logList);
-      },
-      (error) => {
-        console.warn('Firestore logs listener blocked/failed:', error);
-      }
-    );
-
-    // 7. Listen attendance logs
-    const unsubAttendance = onSnapshot(
-      collection(db, 'attendance'),
-      (snapshot) => {
-        const list = [];
-        snapshot.forEach((d) => {
-          list.push(d.data());
-        });
-        list.sort((a, b) => b.timestamp - a.timestamp);
-        setAttendanceLogs(list);
-      },
-      (error) => {
-        console.warn('Firestore attendance listener failed:', error);
-      }
-    );
-
-    // 8. Listen cierres caja
-    const unsubCierres = onSnapshot(
-      collection(db, 'cierres_caja'),
-      (snapshot) => {
-        const list = [];
-        snapshot.forEach((d) => {
-          list.push(d.data());
-        });
-        if (list.length > 0) {
-          list.sort((a, b) => b.timestamp - a.timestamp);
-          setLastClosingTimestamp(list[0].timestamp);
-        }
-      },
-      (error) => {
-        console.warn('Firestore cierres_caja listener failed:', error);
-      }
-    );
-
-    return () => {
-      unsubProducts();
-      unsubTickets();
-      unsubSales();
-      unsubUsers();
-      unsubConfig();
-      unsubLogs();
-      unsubAttendance();
-      unsubCierres();
-    };
-  }, []);
 
   // Supabase Initial Fetch & Realtime Subscriptions
   useEffect(() => {
@@ -841,7 +583,7 @@ export const AppProvider = ({ children }) => {
     setCart([]);
   };
 
-  // Perform checkout writing directly to Cloud Firestore
+  // Perform checkout writing directly to Supabase & State
   const checkoutCart = async (paymentMethod, discountAmount = 0) => {
     const subtotal = cart.reduce((acc, item) => acc + item.price * item.qty, 0);
     const tax = Math.max(0, subtotal - discountAmount) * 0.08;
@@ -866,7 +608,6 @@ export const AppProvider = ({ children }) => {
       if (isSupabaseConfigured && supabase) {
         supabase.from('sales').insert(receipt).catch(console.warn);
       }
-      await setDoc(doc(db, 'sales', receiptId), receipt);
       logActivity('Venta POS', `Venta completada ${receiptId} por $${total.toFixed(2)}.`);
 
       // Update Service Tickets if the cart contains a service payment
@@ -904,7 +645,7 @@ export const AppProvider = ({ children }) => {
             if (isSupabaseConfigured && supabase) {
               supabase.from('tickets').update(updateFields).eq('id', ticketId).catch(console.warn);
             }
-            await updateDoc(doc(db, 'tickets', ticketId), updateFields);
+            setTickets(prevTickets => prevTickets.map(t => t.id === ticketId ? { ...t, ...updateFields } : t));
           }
         }
       }
@@ -921,65 +662,14 @@ export const AppProvider = ({ children }) => {
               status: newStatus
             }).eq('id', cartItem.id).catch(console.warn);
           }
-          await updateDoc(doc(db, 'products', cartItem.id), {
-            stock: newStock,
-            status: newStatus
-          });
+          setProducts(prevProducts =>
+            prevProducts.map(p => p.id === cartItem.id ? { ...p, stock: newStock, status: newStatus } : p)
+          );
         }
       }
+      setSales(prevSales => [receipt, ...prevSales]);
     } catch (e) {
-      console.warn('Advertencia de base de datos durante el checkout (usando fallback local):', e);
-      
-      // Local fallback for service payment updates
-      for (const cartItem of cart) {
-        if (cartItem.isServicePayment && cartItem.serviceTicketId) {
-          const ticketId = cartItem.serviceTicketId;
-          setTickets(prevTickets => prevTickets.map(t => {
-            if (t.id === ticketId) {
-              const paymentRecord = {
-                amount: cartItem.price,
-                date: new Date().toLocaleString('es-ES'),
-                paymentMethod,
-                cashierName: currentUser?.name || 'Hamilton Cortez',
-                type: cartItem.paymentType,
-                receiptId
-              };
-              const existingHistory = t.paymentHistory || [];
-              const updatedHistory = [...existingHistory, paymentRecord];
-              
-              const updatedTimeline = [...t.timeline, {
-                date: new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }),
-                desc: cartItem.paymentType === 'advance' 
-                  ? `Cobro de Adelanto de $${cartItem.price.toFixed(2)} registrado localmente.`
-                  : `Cobro de Saldo de $${cartItem.price.toFixed(2)} registrado localmente.`
-              }];
-
-              if (cartItem.paymentType === 'advance') {
-                return { ...t, advancePaid: true, advancePayment: cartItem.price, paymentHistory: updatedHistory, timeline: updatedTimeline };
-              } else {
-                return { ...t, balancePaid: true, fullyPaid: true, paymentHistory: updatedHistory, timeline: updatedTimeline };
-              }
-            }
-            return t;
-          }));
-        }
-      }
-
-      // Local fallback for stock deduction
-      setProducts(prevProducts => 
-        prevProducts.map(p => {
-          const cartItem = cart.find(c => c.id === p.id);
-          if (cartItem) {
-            const newStock = Math.max(0, p.stock - cartItem.qty);
-            const newStatus = newStock === 0 ? 'Out of Stock' : (newStock < 15 ? 'Low Stock' : 'In Stock');
-            return { ...p, stock: newStock, status: newStatus };
-          }
-          return p;
-        })
-      );
-      
-      // Local fallback for sales tracking
-      setSales(prevSales => [...prevSales, receipt]);
+      console.warn('Error durante el checkout:', e);
     } finally {
       setLastSaleReceipt(receipt);
       clearCart();
@@ -1014,7 +704,7 @@ export const AppProvider = ({ children }) => {
     setSubstate('pos', 'moderno');
   };
 
-  // Add inventory product directly to Cloud Firestore & Supabase
+  // Add inventory product directly to Supabase & State
   const addInventoryProduct = async (product) => {
     const productId = `SKU-${Math.floor(1000 + Math.random() * 9000)}-${product.category.substring(0, 1).toUpperCase()}`;
     const newProd = {
@@ -1033,15 +723,11 @@ export const AppProvider = ({ children }) => {
     if (isSupabaseConfigured && supabase) {
       supabase.from('products').insert(newProd).catch(console.warn);
     }
-    try {
-      await setDoc(doc(db, 'products', productId), newProd);
-      logActivity('Añadir Producto', `Se añadió el producto SKU ${newProd.id} (${newProd.name}) al inventario.`);
-    } catch (e) {
-      console.error('Error al agregar producto al inventario:', e);
-    }
+    setProducts(prev => [newProd, ...prev]);
+    logActivity('Añadir Producto', `Se añadió el producto SKU ${newProd.id} (${newProd.name}) al inventario.`);
   };
 
-  // Add service ticket directly to Cloud Firestore & Supabase
+  // Add service ticket directly to Supabase & State
   const addServiceTicket = async (ticketData) => {
     const newId = ticketData.id || `WO-${Math.floor(1000 + Math.random() * 9000)}`;
     const ticket = {
@@ -1069,17 +755,13 @@ export const AppProvider = ({ children }) => {
     if (isSupabaseConfigured && supabase) {
       supabase.from('tickets').insert(ticket).catch(console.warn);
     }
-    try {
-      await setDoc(doc(db, 'tickets', newId), ticket);
-      setLastCreatedTicket(ticket);
-      logActivity('Nuevo Ticket', `Se registró orden de soporte ${newId} para ${ticket.address}.`);
-      setSubstate('service_registry', 'success');
-    } catch (e) {
-      console.error('Error al registrar ticket de servicio:', e);
-    }
+    setTickets(prev => [ticket, ...prev].sort((a, b) => b.id.localeCompare(a.id)));
+    setLastCreatedTicket(ticket);
+    logActivity('Nuevo Ticket', `Se registró orden de soporte ${newId} para ${ticket.address}.`);
+    setSubstate('service_registry', 'success');
   };
 
-  // Update service ticket timeline and status in Cloud Firestore & Supabase
+  // Update service ticket timeline and status in Supabase & State
   const updateServiceTicket = async (ticketId, newStatus, newTimelineEvent, assignedTech = null) => {
     const ticket = tickets.find(t => t.id === ticketId);
     if (!ticket) return;
@@ -1104,14 +786,8 @@ export const AppProvider = ({ children }) => {
     if (isSupabaseConfigured && supabase) {
       supabase.from('tickets').update(updateFields).eq('id', ticketId).catch(console.warn);
     }
-    try {
-      await updateDoc(doc(db, 'tickets', ticketId), updateFields);
-      logActivity('Actualizar Ticket', `Se actualizó el ticket ${ticketId} a estado ${newStatus}.`);
-    } catch (e) {
-      console.error('Error actualizando el ticket de servicio:', e);
-      // Fallback local
-      setTickets(prev => prev.map(t => t.id === ticketId ? { ...t, ...updateFields } : t));
-    }
+    setTickets(prev => prev.map(t => t.id === ticketId ? { ...t, ...updateFields } : t));
+    logActivity('Actualizar Ticket', `Se actualizó el ticket ${ticketId} a estado ${newStatus}.`);
   };
 
   return (
