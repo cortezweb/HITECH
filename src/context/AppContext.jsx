@@ -1,5 +1,18 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import { supabase, isSupabaseConfigured } from '../config/supabase';
+import { 
+  supabase, 
+  isSupabaseConfigured,
+  mapProductFromDb,
+  mapProductToDb,
+  mapTicketFromDb,
+  mapTicketToDb,
+  mapSaleFromDb,
+  mapSaleToDb,
+  mapAttendanceFromDb,
+  mapAttendanceToDb,
+  mapCierreFromDb,
+  mapCierreToDb
+} from '../config/supabase';
 
 const AppContext = createContext();
 
@@ -366,7 +379,7 @@ export const AppProvider = ({ children }) => {
       timestamp: Date.now()
     };
     if (isSupabaseConfigured && supabase) {
-      supabase.from('attendance').insert(newRecord).catch(console.warn);
+      supabase.from('attendance').insert(mapAttendanceToDb(newRecord)).catch(console.warn);
     }
     setAttendanceLogs(prev => [newRecord, ...prev]);
     logActivity('Reloj Checador', `${name} registró ingreso (Entrada).`, name);
@@ -385,7 +398,7 @@ export const AppProvider = ({ children }) => {
       timestamp: Date.now()
     };
     if (isSupabaseConfigured && supabase) {
-      supabase.from('attendance').insert(newRecord).catch(console.warn);
+      supabase.from('attendance').insert(mapAttendanceToDb(newRecord)).catch(console.warn);
     }
     setAttendanceLogs(prev => [newRecord, ...prev]);
     logActivity('Reloj Checador', `${name} registró egreso (Salida).`, name);
@@ -401,7 +414,7 @@ export const AppProvider = ({ children }) => {
       date: new Date().toLocaleString('es-ES')
     };
     if (isSupabaseConfigured && supabase) {
-      supabase.from('cierres_caja').insert(record).catch(console.warn);
+      supabase.from('cierres_caja').insert(mapCierreToDb(record)).catch(console.warn);
     }
     setLastClosingTimestamp(record.timestamp);
     logActivity('Cierre de Caja', `Cierre Z definitivo realizado por ${cierreData.cajero}. Total Efectivo: $${cierreData.efectivoReal.toFixed(2)}.`);
@@ -458,12 +471,24 @@ export const AppProvider = ({ children }) => {
           supabase.from('cierres_caja').select('*').order('timestamp', { ascending: false }).limit(20)
         ]);
 
-        if (prods && prods.length > 0) setProducts(prods);
-        if (tix && tix.length > 0) setTickets(tix.sort((a, b) => b.id.localeCompare(a.id)));
-        if (sls && sls.length > 0) setSales(sls);
+        if (prods && prods.length > 0) {
+          setProducts(prods.map(mapProductFromDb));
+        } else {
+          initialMockProducts.forEach(p => supabase.from('products').upsert(mapProductToDb(p)).catch(console.warn));
+          setProducts(initialMockProducts);
+        }
+
+        if (tix && tix.length > 0) {
+          setTickets(tix.map(mapTicketFromDb).sort((a, b) => b.id.localeCompare(a.id)));
+        } else {
+          initialMockTickets.forEach(t => supabase.from('tickets').upsert(mapTicketToDb(t)).catch(console.warn));
+          setTickets(initialMockTickets);
+        }
+
+        if (sls && sls.length > 0) setSales(sls.map(mapSaleFromDb));
         if (usrs && usrs.length > 0) setUsers(usrs);
         if (logs && logs.length > 0) setActivityLogs(logs);
-        if (att && att.length > 0) setAttendanceLogs(att);
+        if (att && att.length > 0) setAttendanceLogs(att.map(mapAttendanceFromDb));
         if (closings && closings.length > 0) setLastClosingTimestamp(closings[0].timestamp);
 
         if (cfg) {
@@ -487,25 +512,30 @@ export const AppProvider = ({ children }) => {
       .channel('schema-db-changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, (payload) => {
         if (payload.eventType === 'INSERT') {
-          setProducts(prev => [payload.new, ...prev.filter(p => p.id !== payload.new.id)]);
+          const item = mapProductFromDb(payload.new);
+          setProducts(prev => [item, ...prev.filter(p => p.id !== item.id)]);
         } else if (payload.eventType === 'UPDATE') {
-          setProducts(prev => prev.map(p => p.id === payload.new.id ? payload.new : p));
+          const item = mapProductFromDb(payload.new);
+          setProducts(prev => prev.map(p => p.id === item.id ? item : p));
         } else if (payload.eventType === 'DELETE') {
           setProducts(prev => prev.filter(p => p.id !== payload.old.id));
         }
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'tickets' }, (payload) => {
         if (payload.eventType === 'INSERT') {
-          setTickets(prev => [payload.new, ...prev.filter(t => t.id !== payload.new.id)].sort((a, b) => b.id.localeCompare(a.id)));
+          const item = mapTicketFromDb(payload.new);
+          setTickets(prev => [item, ...prev.filter(t => t.id !== item.id)].sort((a, b) => b.id.localeCompare(a.id)));
         } else if (payload.eventType === 'UPDATE') {
-          setTickets(prev => prev.map(t => t.id === payload.new.id ? payload.new : t));
+          const item = mapTicketFromDb(payload.new);
+          setTickets(prev => prev.map(t => t.id === item.id ? item : t));
         } else if (payload.eventType === 'DELETE') {
           setTickets(prev => prev.filter(t => t.id !== payload.old.id));
         }
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'sales' }, (payload) => {
         if (payload.eventType === 'INSERT') {
-          setSales(prev => [payload.new, ...prev.filter(s => s.id !== payload.new.id)]);
+          const item = mapSaleFromDb(payload.new);
+          setSales(prev => [item, ...prev.filter(s => s.id !== item.id)]);
         } else if (payload.eventType === 'DELETE') {
           setSales(prev => prev.filter(s => s.id !== payload.old.id));
         }
@@ -529,7 +559,7 @@ export const AppProvider = ({ children }) => {
         setActivityLogs(prev => [payload.new, ...prev]);
       })
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'attendance' }, (payload) => {
-        setAttendanceLogs(prev => [payload.new, ...prev]);
+        setAttendanceLogs(prev => [mapAttendanceFromDb(payload.new), ...prev]);
       })
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'cierres_caja' }, (payload) => {
         setLastClosingTimestamp(payload.new.timestamp);
@@ -606,7 +636,7 @@ export const AppProvider = ({ children }) => {
     
     try {
       if (isSupabaseConfigured && supabase) {
-        supabase.from('sales').insert(receipt).catch(console.warn);
+        supabase.from('sales').insert(mapSaleToDb(receipt)).catch(console.warn);
       }
       logActivity('Venta POS', `Venta completada ${receiptId} por $${total.toFixed(2)}.`);
 
@@ -643,7 +673,7 @@ export const AppProvider = ({ children }) => {
             
             await updateServiceTicket(ticketId, ticket.status, timelineMsg);
             if (isSupabaseConfigured && supabase) {
-              supabase.from('tickets').update(updateFields).eq('id', ticketId).catch(console.warn);
+              supabase.from('tickets').update(mapTicketToDb(updateFields)).eq('id', ticketId).catch(console.warn);
             }
             setTickets(prevTickets => prevTickets.map(t => t.id === ticketId ? { ...t, ...updateFields } : t));
           }
@@ -721,7 +751,7 @@ export const AppProvider = ({ children }) => {
     };
 
     if (isSupabaseConfigured && supabase) {
-      supabase.from('products').insert(newProd).catch(console.warn);
+      supabase.from('products').insert(mapProductToDb(newProd)).catch(console.warn);
     }
     setProducts(prev => [newProd, ...prev]);
     logActivity('Añadir Producto', `Se añadió el producto SKU ${newProd.id} (${newProd.name}) al inventario.`);
@@ -753,7 +783,7 @@ export const AppProvider = ({ children }) => {
     };
 
     if (isSupabaseConfigured && supabase) {
-      supabase.from('tickets').insert(ticket).catch(console.warn);
+      supabase.from('tickets').insert(mapTicketToDb(ticket)).catch(console.warn);
     }
     setTickets(prev => [ticket, ...prev].sort((a, b) => b.id.localeCompare(a.id)));
     setLastCreatedTicket(ticket);
@@ -784,7 +814,7 @@ export const AppProvider = ({ children }) => {
     }
 
     if (isSupabaseConfigured && supabase) {
-      supabase.from('tickets').update(updateFields).eq('id', ticketId).catch(console.warn);
+      supabase.from('tickets').update(mapTicketToDb(updateFields)).eq('id', ticketId).catch(console.warn);
     }
     setTickets(prev => prev.map(t => t.id === ticketId ? { ...t, ...updateFields } : t));
     logActivity('Actualizar Ticket', `Se actualizó el ticket ${ticketId} a estado ${newStatus}.`);
