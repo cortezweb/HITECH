@@ -23,10 +23,19 @@ export default function ServiceRegistry() {
   const [previewReceiptTicket, setPreviewReceiptTicket] = useState(null);
   const [formData, setFormData] = useState({
     customerName: '',
+    ciNit: '5489214 Tarija',
     phone: '',
+    city: 'Tarija, Bolivia',
+    clientAddress: 'Barrio San Martín, Calle Ingavi N° 450',
+    deviceType: 'Computadora Portátil (Laptop)',
     brand: '',
     model: '',
+    serialNumber: 'PF-3X9K82',
+    processorRam: 'Intel Core i7-1255U / 16 GB DDR4',
+    storage: 'SSD NVMe M.2 512 GB',
+    accessories: 'Cargador original USB-C 65W, funda protectora',
     issue: '',
+    diagnosis: '',
     estimate: '',
     advancePayment: '',
     commonFaults: []
@@ -37,16 +46,25 @@ export default function ServiceRegistry() {
   const [statusFilter, setStatusFilter] = useState('All'); // 'All' | 'Pending' | 'In Progress' | 'Completed'
 
   const [manualData, setManualData] = useState({
-    id: '',
-    customerName: '',
-    phone: '',
-    brand: '',
-    model: '',
-    issue: '',
-    estimate: '',
-    advancePayment: '',
-    date: '',
-    commonFaults: []
+    id: 'ST-2026-00482',
+    customerName: 'Lic. Carlos Eduardo Mendoza Ramos',
+    ciNit: '5489214 Tarija',
+    phone: '+591 71234567',
+    city: 'Tarija, Bolivia',
+    clientAddress: 'Barrio San Martín, Calle Ingavi N° 450',
+    deviceType: 'Computadora Portátil (Laptop)',
+    brand: 'Lenovo',
+    model: 'ThinkPad E14 Gen 4',
+    serialNumber: 'PF-3X9K82',
+    processorRam: 'Intel Core i7-1255U / 16 GB DDR4',
+    storage: 'SSD NVMe M.2 512 GB',
+    accessories: 'Cargador original USB-C 65W, funda protectora',
+    issue: 'Equipo presenta sobrecalentamiento, apagado repentino y lentitud generalizada en arranque del SO.',
+    diagnosis: 'Obstrucción por polvo en disipador, pasta térmica degradada, sectores lógicos inconsistentes en sistema operativo y necesidad de mantenimiento preventivo integral y optimización.',
+    estimate: '450',
+    advancePayment: '0',
+    date: '05 / 09 / 2026',
+    commonFaults: ['Sobrecalentamiento', 'Apagado repentino']
   });
 
   const currentSubstate = substates.service_registry;
@@ -54,20 +72,14 @@ export default function ServiceRegistry() {
   // Initialize manual ticket defaults when entering manual generator
   useEffect(() => {
     if (currentSubstate === 'manual_generator') {
-      const randomId = `WO-${Math.floor(1000 + Math.random() * 9000)}`;
-      const currentDate = new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' }) + `, ${new Date().getHours()}:${String(new Date().getMinutes()).padStart(2, '0')}`;
-      setManualData({
-        id: randomId,
-        customerName: '',
-        phone: '',
-        brand: '',
-        model: '',
-        issue: '',
-        estimate: '',
-        advancePayment: '',
-        date: currentDate,
-        commonFaults: []
-      });
+      const nextNum = String(Math.floor(100 + Math.random() * 900));
+      const randomId = `ST-2026-00${nextNum}`;
+      const currentDate = '05 / 09 / 2026';
+      setManualData(prev => ({
+        ...prev,
+        id: prev.id || randomId,
+        date: prev.date || currentDate
+      }));
     }
   }, [currentSubstate]);
 
@@ -77,31 +89,34 @@ export default function ServiceRegistry() {
     }
     if (currentSubstate === 'manual_generator') {
       return {
-        id: manualData.id || 'WO-0000',
-        address: manualData.customerName || 'Cliente General',
-        city: manualData.phone || '',
-        systemType: `${manualData.brand || ''} ${manualData.model || ''}`.trim() || 'Dispositivo',
-        price: parseFloat(manualData.estimate) || 0,
+        id: manualData.id || 'ST-2026-00482',
+        address: manualData.customerName || 'Lic. Carlos Eduardo Mendoza Ramos',
+        customerName: manualData.customerName || 'Lic. Carlos Eduardo Mendoza Ramos',
+        clientCi: manualData.ciNit || '5489214 Tarija',
+        phone: manualData.phone || '+591 71234567',
+        city: manualData.city ? `${manualData.phone} • ${manualData.city}` : '+591 71234567 • Tarija, Bolivia',
+        clientCity: manualData.city || 'Tarija, Bolivia',
+        clientAddress: manualData.clientAddress || 'Barrio San Martín, Calle Ingavi N° 450',
+        systemType: `${manualData.brand || 'Lenovo'} ${manualData.model || 'ThinkPad E14 Gen 4'}`.trim(),
+        deviceType: manualData.deviceType || 'Computadora Portátil (Laptop)',
+        serialNumber: manualData.serialNumber || 'PF-3X9K82',
+        processorRam: manualData.processorRam || 'Intel Core i7-1255U / 16 GB DDR4',
+        storage: manualData.storage || 'SSD NVMe M.2 512 GB',
+        accessories: manualData.accessories || 'Cargador original USB-C 65W, funda protectora',
+        price: parseFloat(manualData.estimate) || 450,
         advancePayment: parseFloat(manualData.advancePayment) || 0,
-        date: manualData.date || new Date().toLocaleString(),
-        desc: manualData.issue || 'Sin detalles.',
-        commonFaults: manualData.commonFaults || [],
+        date: manualData.date || '05 / 09 / 2026',
+        desc: manualData.issue || 'Obstrucción por polvo en disipador, pasta térmica degradada y optimización.',
+        diagnosis: manualData.diagnosis || 'Obstrucción por polvo en disipador, pasta térmica degradada y optimización.',
+        commonFaults: manualData.commonFaults || ['Sobrecalentamiento', 'Lentitud generalizada'],
         status: 'Manual',
         timeline: []
       };
     } else if (currentSubstate === 'success') {
-      return lastCreatedTicket || {
-        id: 'WO-0000',
-        address: 'Cliente General',
-        city: '',
-        systemType: 'Dispositivo',
-        price: 0,
-        date: 'hoy',
-        desc: 'Sin detalles.'
-      };
+      return lastCreatedTicket || tickets[0] || null;
     } else {
       const activeTicket = tickets.find(t => t.id === selectedTicket?.id);
-      return activeTicket || null;
+      return activeTicket || tickets[0] || null;
     }
   };
 
@@ -216,9 +231,9 @@ export default function ServiceRegistry() {
                 </div>
                 <div>
                   <h4 className="font-bold text-on-surface-variant">Costo Estimado</h4>
-                  <p className="text-[16px] font-bold text-on-surface mt-0.5">${ticket.price.toFixed(2)}</p>
+                  <p className="text-[16px] font-bold text-on-surface mt-0.5">Bs. {ticket.price.toFixed(2)}</p>
                   {ticket.advancePayment > 0 && (
-                    <p className="text-[11px] text-amber-600 font-semibold mt-0.5">Adelanto: ${ticket.advancePayment.toFixed(2)} ({ticket.advancePaid ? 'Cobrado' : 'Pendiente Cobro'})</p>
+                    <p className="text-[11px] text-amber-600 font-semibold mt-0.5">Adelanto: Bs. {ticket.advancePayment.toFixed(2)} ({ticket.advancePaid ? 'Cobrado' : 'Pendiente Cobro'})</p>
                   )}
                 </div>
               </div>
@@ -255,7 +270,7 @@ export default function ServiceRegistry() {
                   className="flex-1 py-3 bg-amber-500 text-white font-bold rounded-xl text-[13px] flex items-center justify-center gap-2 hover:bg-amber-600 active:scale-95 transition-all cursor-pointer border-none"
                 >
                   <span className="material-symbols-outlined text-[18px]">point_of_sale</span>
-                  <span>Cobrar Adelanto (${ticket.advancePayment.toFixed(2)})</span>
+                  <span>Cobrar Adelanto (Bs. {ticket.advancePayment.toFixed(2)})</span>
                 </button>
               )}
               <button 
@@ -446,9 +461,11 @@ export default function ServiceRegistry() {
                   })}
                 </div>
               </div>
+            </div>
 
+            <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-[11px] font-bold text-on-surface-variant mb-1">Costo Estimado ($) *</label>
+                <label className="block text-[11px] font-bold text-on-surface-variant mb-1">Costo Estimado (Bs.) *</label>
                 <input
                   type="number"
                   required
@@ -460,7 +477,7 @@ export default function ServiceRegistry() {
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold text-on-surface-variant mb-1">Monto de Adelanto ($) (Opcional)</label>
+                <label className="block text-[11px] font-bold text-on-surface-variant mb-1">Monto de Adelanto (Bs.) (Opcional)</label>
                 <input
                   type="number"
                   value={manualData.advancePayment}
@@ -477,14 +494,16 @@ export default function ServiceRegistry() {
                 onClick={() => {
                   setManualData(prev => ({
                     ...prev,
-                    id: `WO-${Math.floor(1000 + Math.random() * 9000)}`,
-                    customerName: '',
-                    phone: '',
-                    brand: '',
-                    model: '',
-                    issue: '',
-                    estimate: '',
-                    date: new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' }) + `, ${new Date().getHours()}:${String(new Date().getMinutes()).padStart(2, '0')}`
+                    id: `ST-2026-00${Math.floor(100 + Math.random() * 900)}`,
+                    customerName: 'Lic. Carlos Eduardo Mendoza Ramos',
+                    ciNit: '5489214 Tarija',
+                    phone: '+591 71234567',
+                    brand: 'Lenovo',
+                    model: 'ThinkPad E14 Gen 4',
+                    issue: 'Equipo presenta sobrecalentamiento, apagado repentino y lentitud generalizada en arranque del SO.',
+                    estimate: '450',
+                    advancePayment: '0',
+                    date: '05 / 09 / 2026'
                   }));
                 }}
                 className="px-5 py-3 bg-surface-container text-on-surface rounded-xl text-[13px] font-semibold hover:bg-surface-container-high transition-all cursor-pointer"
@@ -509,81 +528,77 @@ export default function ServiceRegistry() {
 
               <button
                 type="button"
-                onClick={async () => {
+                onClick={() => {
                   if (!manualData.customerName || !manualData.phone || !manualData.brand || !manualData.issue || !manualData.estimate) {
                     alert('Por favor completa todos los campos marcados con * antes de guardar e imprimir.');
                     return;
                   }
                   
-                  // Add to database
-                  await addServiceTicket(manualData);
-                  
-                  // Instantly open browser print dialog too
+                  addServiceTicket({
+                    id: manualData.id,
+                    customerName: manualData.customerName,
+                    phone: manualData.phone,
+                    brand: manualData.brand,
+                    model: manualData.model,
+                    issue: manualData.issue,
+                    estimate: manualData.estimate,
+                    advancePayment: manualData.advancePayment,
+                    commonFaults: manualData.commonFaults || [],
+                    date: manualData.date
+                  });
+
                   setTimeout(() => {
                     window.print();
-                  }, 300);
+                  }, 200);
                 }}
-                className="flex-[1.5] py-3 bg-primary text-on-primary rounded-xl font-bold text-[13px] hover:brightness-105 active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                className="flex-1 py-3 bg-primary text-on-primary rounded-xl font-bold text-[13px] hover:brightness-105 active:scale-95 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
               >
-                <span className="material-symbols-outlined text-[18px]">save</span>
+                <span className="material-symbols-outlined text-[18px]">check_circle</span>
                 <span>Guardar e Imprimir</span>
               </button>
             </div>
           </div>
 
-          {/* Right Column: Preview & Size select */}
-          <div className="lg:col-span-5 space-y-6">
-            {/* Format Selector */}
-            <div className="bg-white p-6 rounded-3xl border border-outline-variant/10 shadow-sm space-y-4">
-              <h4 className="text-[13px] font-bold text-on-surface flex items-center gap-2">
-                <span className="material-symbols-outlined text-primary">aspect_ratio</span>
-                <span>Tamaño de Impresión</span>
-              </h4>
-              
-              <div className="grid grid-cols-3 gap-2">
-                {['50mm', '80mm', 'A4'].map((size) => (
-                  <button
-                    key={size}
-                    type="button"
-                    onClick={() => setPrintSize(size)}
-                    className={`py-2 px-3 rounded-xl border text-[12px] font-bold flex flex-col items-center justify-center gap-1 transition-all cursor-pointer ${
-                      printSize === size 
-                        ? 'bg-primary border-primary text-white shadow-sm'
-                        : 'border-outline-variant/30 text-on-surface-variant hover:bg-slate-50'
-                    }`}
-                  >
-                    <span className="font-bold text-[14px]">{size}</span>
-                    <span className="text-[8px] opacity-75">
-                      {size === '50mm' ? 'Slim' : size === '80mm' ? 'Estándar' : 'A4 Duplicado'}
-                    </span>
-                  </button>
-                ))}
+          {/* Right Column: Live Printable Preview */}
+          <div className="lg:col-span-5 space-y-4">
+            <div className="bg-white p-6 rounded-3xl border border-outline-variant/10 shadow-sm text-left">
+              <div className="flex justify-between items-center mb-4">
+                <h4 className="font-bold text-[14px] text-on-surface">Vista Previa de Impresión</h4>
+                <div className="flex gap-1 bg-surface-container p-1 rounded-lg">
+                  {['50mm', '80mm', 'A4'].map((size) => (
+                    <button
+                      key={size}
+                      type="button"
+                      onClick={() => setPrintSize(size)}
+                      className={`px-2 py-1 rounded text-[11px] font-bold transition-all cursor-pointer ${
+                        printSize === size 
+                          ? 'bg-white shadow-xs text-primary' 
+                          : 'text-on-surface-variant hover:text-on-surface'
+                      }`}
+                    >
+                      {size}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
 
-            {/* Live Preview Panel */}
-            <div className="bg-slate-100 p-6 rounded-3xl border border-outline-variant/10 text-left space-y-3">
-              <div className="flex justify-between items-center border-b border-slate-200 pb-2">
-                <h4 className="text-[12px] font-bold text-on-surface-variant">Vista Previa ({printSize})</h4>
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              </div>
-              
-              <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-inner max-h-[380px] overflow-y-auto font-mono text-[10px] text-black">
+              {/* Physical Print Representation Container */}
+              <div className="bg-slate-100 p-3 rounded-2xl border border-dashed border-outline-variant/40 flex justify-center overflow-hidden">
                 {printSize === '50mm' && (
-                  <div className="w-full p-1 leading-tight space-y-1">
-                    <div className="text-center border-b border-dashed border-slate-400 pb-1 mb-1">
-                      <h2 className="text-[11px] font-bold uppercase">ORDEN SERVICIO</h2>
-                      <p className="text-[7px]">Telf: {shopInfo.phone}</p>
+                  <div className="w-[50mm] bg-white p-2 font-mono text-[9px] shadow-sm border border-slate-200">
+                    <div className="text-center border-b border-dashed border-slate-300 pb-1 mb-1">
+                      <h5 className="font-bold uppercase text-[9px]">{shopInfo.name}</h5>
+                      <p className="text-[7px]">Ticket Rápido</p>
                     </div>
-                    <div className="space-y-0.5 text-[8px] border-b border-dashed border-slate-400 pb-1">
-                      <p><strong>Ticket:</strong> {manualData.id || 'WO-XXXX'}</p>
+                    <div className="space-y-0.5 text-[8px] border-b border-dashed border-slate-300 pb-1 mb-1">
+                      <p><strong>Nro:</strong> {manualData.id || 'ST-XXXX'}</p>
                       <p><strong>Fecha:</strong> {manualData.date || '...'}</p>
                       <p><strong>Cliente:</strong> {manualData.customerName || '...'}</p>
                     </div>
                     <div className="space-y-1 text-[8px]">
                       <p><strong>Equipo:</strong> {manualData.brand} {manualData.model}</p>
                       <p><strong>Falla:</strong> {manualData.issue || '...'}</p>
-                      <p className="font-bold text-right mt-1">Est: ${parseFloat(manualData.estimate || 0).toFixed(2)}</p>
+                      <p className="font-bold text-right mt-1">Est: Bs. {parseFloat(manualData.estimate || 0).toFixed(2)}</p>
                     </div>
                   </div>
                 )}
@@ -595,7 +610,7 @@ export default function ServiceRegistry() {
                       <p className="text-[9px]">{shopInfo.name}</p>
                     </div>
                     <div className="space-y-1 text-[9px] border-b border-dashed border-slate-400 pb-2">
-                      <p><strong>Nro. Ticket:</strong> {manualData.id || 'WO-XXXX'}</p>
+                      <p><strong>Nro. Ticket:</strong> {manualData.id || 'ST-XXXX'}</p>
                       <p><strong>Fecha Reg:</strong> {manualData.date || '...'}</p>
                       <p><strong>Cliente:</strong> {manualData.customerName || '...'}</p>
                       <p><strong>Telf:</strong> {manualData.phone || '...'}</p>
@@ -604,44 +619,14 @@ export default function ServiceRegistry() {
                       <p><strong>Dispositivo:</strong> {manualData.brand} {manualData.model}</p>
                       <p><strong>Problema / Diagnóstico:</strong></p>
                       <p className="pl-1.5 border-l-2 border-slate-400 italic text-slate-700">{manualData.issue || '...'}</p>
-                      <p className="text-[11px] font-bold text-right mt-1">Costo Estimado: ${parseFloat(manualData.estimate || 0).toFixed(2)}</p>
+                      <p className="text-[11px] font-bold text-right mt-1">Costo Estimado: Bs. {parseFloat(manualData.estimate || 0).toFixed(2)}</p>
                     </div>
                   </div>
                 )}
 
                 {printSize === 'A4' && (
-                  <div className="w-full p-1 space-y-3 font-sans text-[8px]">
-                    <div className="border border-slate-200 p-2 rounded bg-slate-50/50">
-                      <div className="flex justify-between items-center border-b border-slate-200 pb-1">
-                        <span className="font-bold uppercase text-[9px] text-primary">{shopInfo.name} - COPIA TALLER</span>
-                        <span className="font-bold font-mono text-[9px] text-primary">{manualData.id || 'WO-XXXX'}</span>
-                      </div>
-                      <div className="grid grid-cols-2 gap-0.5 mt-1 text-[8px]">
-                        <p><strong>Cliente:</strong> {manualData.customerName || '...'}</p>
-                        <p><strong>Equipo:</strong> {manualData.brand} {manualData.model}</p>
-                        <p><strong>Teléfono:</strong> {manualData.phone || '...'}</p>
-                        <p><strong>Costo:</strong> ${parseFloat(manualData.estimate || 0).toFixed(2)}</p>
-                      </div>
-                      <p className="text-[7px] mt-1 border-t border-slate-100 pt-1 italic text-slate-600"><strong>Falla:</strong> {manualData.issue || '...'}</p>
-                    </div>
-
-                    <div className="py-0.5 border-y border-dashed border-slate-300 text-center text-[7px] text-slate-400 select-none">
-                      ✂️ - - - - - CORTE AQUÍ - - - - -
-                    </div>
-
-                    <div className="border border-slate-200 p-2 rounded bg-slate-50/50">
-                      <div className="flex justify-between items-center border-b border-slate-200 pb-1">
-                        <span className="font-bold uppercase text-[9px] text-primary">{shopInfo.name} - COMPROBANTE DE RECOJO</span>
-                        <span className="font-bold font-mono text-[9px] text-primary">{manualData.id || 'WO-XXXX'}</span>
-                      </div>
-                      <div className="grid grid-cols-2 gap-0.5 mt-1 text-[8px]">
-                        <p><strong>Cliente:</strong> {manualData.customerName || '...'}</p>
-                        <p><strong>Equipo:</strong> {manualData.brand} {manualData.model}</p>
-                        <p><strong>Teléfono:</strong> {manualData.phone || '...'}</p>
-                        <p><strong>Costo:</strong> ${parseFloat(manualData.estimate || 0).toFixed(2)}</p>
-                      </div>
-                      <p className="text-[7px] text-slate-500 mt-1 leading-tight">Para el recojo es obligatorio presentar este comprobante físico. {shopInfo.warranty}</p>
-                    </div>
+                  <div className="w-full bg-white shadow-sm border border-slate-200 overflow-hidden transform scale-90 origin-top">
+                    <OfficialServiceReceipt ticket={ticketPreview} shopInfo={shopInfo} />
                   </div>
                 )}
               </div>
@@ -840,19 +825,19 @@ export default function ServiceRegistry() {
                 </div>
 
                 <div>
-                  <label className="block text-[12px] font-bold text-on-surface-variant mb-1">Cotización Estimada ($) *</label>
+                  <label className="block text-[12px] font-bold text-on-surface-variant mb-1">Cotización Estimada (Bs.) *</label>
                   <input
                     type="number"
                     required
                     value={formData.estimate}
                     onChange={(e) => setFormData({ ...formData, estimate: e.target.value })}
-                    placeholder="Monto aproximado en $"
+                    placeholder="Monto aproximado en Bs."
                     className="w-full px-4 py-2.5 bg-surface-container-low border border-outline-variant/30 rounded-xl focus:border-primary focus:ring-1 focus:ring-primary text-[13px] outline-none"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[12px] font-bold text-on-surface-variant mb-1">Monto de Adelanto ($) (Opcional)</label>
+                  <label className="block text-[12px] font-bold text-on-surface-variant mb-1">Monto de Adelanto (Bs.) (Opcional)</label>
                   <input
                     type="number"
                     value={formData.advancePayment}
@@ -1037,7 +1022,7 @@ export default function ServiceRegistry() {
                       <span className="hidden sm:inline">Recibo A4</span>
                     </button>
                     <div className="text-right">
-                      <p className="text-[14px] font-black text-on-surface">${ticket.price.toFixed(2)}</p>
+                      <p className="text-[14px] font-black text-on-surface">Bs. {ticket.price.toFixed(2)}</p>
                       <p className="text-[11px] text-on-surface-variant">{ticket.date}</p>
                     </div>
                     <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold border ${
@@ -1114,13 +1099,13 @@ export default function ServiceRegistry() {
                     
                     <div className="flex justify-between items-center text-[12px]">
                       <span className="font-medium text-on-surface-variant">Costo Estimado:</span>
-                      <span className="font-black text-on-surface">${activeTicket.price.toFixed(2)}</span>
+                      <span className="font-black text-on-surface">Bs. {activeTicket.price.toFixed(2)}</span>
                     </div>
 
                     <div className="flex justify-between items-center text-[12px]">
                       <span className="font-medium text-on-surface-variant">Adelanto Dejado:</span>
                       <div className="flex items-center gap-1.5">
-                        <span className="font-bold text-on-surface">${(activeTicket.advancePayment || 0).toFixed(2)}</span>
+                        <span className="font-bold text-on-surface">Bs. {(activeTicket.advancePayment || 0).toFixed(2)}</span>
                         {(activeTicket.advancePayment || 0) > 0 ? (
                           <span className={`px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase ${
                             activeTicket.advancePaid 
@@ -1139,7 +1124,7 @@ export default function ServiceRegistry() {
                       <span className="font-bold text-on-surface">Saldo Restante:</span>
                       <div className="flex items-center gap-1.5">
                         <span className="font-black text-[15px] text-primary">
-                          ${((activeTicket.price || 0) - (activeTicket.advancePaid ? (activeTicket.advancePayment || 0) : 0)).toFixed(2)}
+                          Bs. {((activeTicket.price || 0) - (activeTicket.advancePaid ? (activeTicket.advancePayment || 0) : 0)).toFixed(2)}
                         </span>
                         <span className={`px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase ${
                           activeTicket.fullyPaid 
@@ -1161,7 +1146,7 @@ export default function ServiceRegistry() {
                         className="w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-bold text-[12px] shadow-sm flex items-center justify-center gap-1.5 transition-all cursor-pointer border-none"
                       >
                         <span className="material-symbols-outlined text-[16px]">payments</span>
-                        <span>Cobrar Adelanto en POS (${activeTicket.advancePayment.toFixed(2)})</span>
+                        <span>Cobrar Adelanto en POS (Bs. {activeTicket.advancePayment.toFixed(2)})</span>
                       </button>
                     )}
 
@@ -1172,7 +1157,7 @@ export default function ServiceRegistry() {
                         className="w-full py-2.5 bg-primary hover:brightness-105 text-on-primary rounded-xl font-bold text-[12px] shadow-md flex items-center justify-center gap-1.5 transition-all cursor-pointer border-none"
                       >
                         <span className="material-symbols-outlined text-[16px]">point_of_sale</span>
-                        <span>Cobrar Saldo en POS (${((activeTicket.price || 0) - (activeTicket.advancePaid ? (activeTicket.advancePayment || 0) : 0)).toFixed(2)})</span>
+                        <span>Cobrar Saldo en POS (Bs. {((activeTicket.price || 0) - (activeTicket.advancePaid ? (activeTicket.advancePayment || 0) : 0)).toFixed(2)})</span>
                       </button>
                     )}
                   </div>
@@ -1428,16 +1413,16 @@ function PrintableTicket({ ticket, printSize }) {
               <p><strong>Fallas:</strong> {ticket.commonFaults.join(', ')}</p>
             )}
             <p><strong>Falla:</strong> {ticket.desc}</p>
-            <p className="text-right mt-1">Est: ${price.toFixed(2)}</p>
+            <p className="text-right mt-1">Est: Bs. {price.toFixed(2)}</p>
             {ticket.advancePayment > 0 && (
               <>
-                <p className="text-right">Adelanto: ${(ticket.advancePayment || 0).toFixed(2)} ({ticket.advancePaid ? 'Pagado' : 'Impago'})</p>
-                <p className="font-bold text-right">Saldo: ${(price - (ticket.advancePaid ? (ticket.advancePayment || 0) : 0)).toFixed(2)}</p>
+                <p className="text-right">Adelanto: Bs. {(ticket.advancePayment || 0).toFixed(2)} ({ticket.advancePaid ? 'Pagado' : 'Impago'})</p>
+                <p className="font-bold text-right">Saldo: Bs. ${(price - (ticket.advancePaid ? (ticket.advancePayment || 0) : 0)).toFixed(2)}</p>
               </>
             )}
           </div>
           <div className="text-center mt-3 border-t border-dashed border-slate-400 pt-1.5 text-[7px] text-slate-500">
-            <p>SISTECH Servicios Técnicos</p>
+            <p>SERVICIO TÉCNICO ESPECIALIZADO - Tarija</p>
           </div>
         </div>
       )}
@@ -1449,7 +1434,7 @@ function PrintableTicket({ ticket, printSize }) {
             <h2 className="text-[15px] font-bold uppercase tracking-wide">ORDEN DE SERVICIO</h2>
             <p className="text-[10px] text-slate-700">{shopInfo.name}</p>
             <p className="text-[10px] text-slate-700">{shopInfo.address}</p>
-            <p className="text-[10px] text-slate-700">RUC: {shopInfo.ruc}</p>
+            <p className="text-[10px] text-slate-700">NIT/CI: {shopInfo.ruc}</p>
             <p className="text-[10px] text-slate-700 mt-0.5">Telf: {shopInfo.phone}</p>
           </div>
 
@@ -1470,14 +1455,14 @@ function PrintableTicket({ ticket, printSize }) {
             <p><strong>Problema / Diagnóstico:</strong></p>
             <p className="pl-2 border-l-2 border-slate-400 italic text-slate-700 leading-normal">{ticket.desc}</p>
             <div className="text-right mt-2 space-y-0.5 text-black">
-              <p className="text-[11px]">Costo Estimado: ${price.toFixed(2)}</p>
+              <p className="text-[11px]">Costo Estimado: Bs. {price.toFixed(2)}</p>
               {ticket.advancePayment > 0 && (
                 <>
-                  <p className="text-[11px]">Adelanto Dejado: ${(ticket.advancePayment || 0).toFixed(2)} ({ticket.advancePaid ? 'Cobrado' : 'Impago'})</p>
+                  <p className="text-[11px]">Adelanto Dejado: Bs. ${(ticket.advancePayment || 0).toFixed(2)} ({ticket.advancePaid ? 'Cobrado' : 'Impago'})</p>
                 </>
               )}
               <p className="text-[13px] font-bold border-t border-dashed border-slate-300 pt-1">
-                Saldo Pendiente: ${(price - (ticket.advancePaid ? (ticket.advancePayment || 0) : 0)).toFixed(2)}
+                Saldo Pendiente: Bs. {(price - (ticket.advancePaid ? (ticket.advancePayment || 0) : 0)).toFixed(2)}
               </p>
             </div>
           </div>

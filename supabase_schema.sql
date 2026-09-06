@@ -152,12 +152,18 @@ INSERT INTO users (id, email, password, name, role, status, avatar, date)
 VALUES
     ('usr-1', 'admin@sistech.com', 'admin123', 'Alex Sterling', 'admin', 'active', 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80', '24/06/2026'),
     ('usr-2', 'cajero@sistech.com', 'cajero123', 'Hamilton Cortez', 'cajero', 'active', 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=80&q=80', '24/06/2026'),
-    ('usr-3', 'tecnico@sistech.com', 'tecnico123', 'Deanna Annis', 'tecnico', 'active', 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=80&q=80', '24/06/2026')
+    ('usr-3', 'tecnico@sistech.com', 'tecnico123', 'Ing. Milton Berthy Choque Canaviri', 'tecnico', 'active', 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=80&q=80', '24/06/2026')
 ON CONFLICT (id) DO NOTHING;
 
 -- Datos Semilla Iniciales: Configuración
 INSERT INTO config (id, data)
 VALUES
-    ('shopInfo', '{"name": "HITECH POS", "ruc": "20748392018", "address": "Av. Aviación 1482, San Borja", "phone": "(01) 224-8594 / 942-597-869", "warranty": "Garantía de servicio: 30 días en mano de obra. No cubre daños físicos ni líquidos.", "weatherLocation": "Lima, PE"}'::jsonb),
+    ('shopInfo', '{"name": "SERVICIO TÉCNICO ESPECIALIZADO", "subtitle": "Soporte Informático, Reparación y Mantenimiento Electrónico", "activity": "Servicios Profesionales de Tecnología y Soporte de Hardware/Software", "ruc": "7183920 Tarija", "address": "Av. Principal #1234, Zona Central", "phone": "+591 70000000", "email": "soporte.tecnico@contacto.com", "warranty": "Garantía técnica de 60 (sesenta) días calendario a partir de la emisión.", "weatherLocation": "Tarija, BO"}'::jsonb),
     ('rolePermissions', '{"admin": ["dashboard", "service_registry", "pos", "inventory", "reports", "settings"], "cajero": ["dashboard", "pos"], "tecnico": ["dashboard", "service_registry"]}'::jsonb)
+ON CONFLICT (id) DO NOTHING;
+
+-- Datos Semilla Iniciales: Órdenes de Servicio Técnico (Tickets)
+INSERT INTO tickets (id, address, city, systemtype, status, price, advancepayment, advancepaid, balancepaid, fullypaid, date, techs, "desc", commonfaults, assignedtech, timeline)
+VALUES
+    ('ST-2026-00482', 'Lic. Carlos Eduardo Mendoza Ramos', '+591 71234567 • Tarija, Bolivia', 'Lenovo ThinkPad E14 Gen 4', 'Completed', 450.00, 0.00, false, true, true, '05 / 09 / 2026, 11:30', 1, 'Obstrucción por polvo en disipador, pasta térmica degradada, sectores lógicos inconsistentes en sistema operativo y necesidad de mantenimiento preventivo integral y optimización.', '["Sobrecalentamiento", "Apagado repentino", "Lentitud generalizada", "Pasta térmica degradada"]'::jsonb, '{"name": "Ing. Milton Berthy Choque Canaviri", "role": "Responsable de Servicio Técnico / Propietario", "ci": "7183920 Tarija"}'::jsonb, '[{"date": "05/09/2026 09:15", "desc": "Ingreso del equipo: diagnóstico por sobrecalentamiento y lentitud en arranque."}, {"date": "05/09/2026 11:00", "desc": "Mantenimiento preventivo profundo y aplicación de pasta térmica Arctic MX-4."}, {"date": "05/09/2026 13:30", "desc": "Formateo limpio, controladores originales y respaldo de datos MD5 verificado."}, {"date": "05/09/2026 15:00", "desc": "Pruebas térmicas superadas (68°C bajo carga). Constancia y recibo extendido."}]'::jsonb)
 ON CONFLICT (id) DO NOTHING;

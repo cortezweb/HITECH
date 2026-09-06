@@ -132,49 +132,144 @@ const initialMockProducts = [
 
 const initialMockTickets = [
   {
-    id: 'WO-1094',
-    address: '165 Belmont Drive',
-    city: 'Parowan, UT',
-    systemType: 'Thermostat Fix',
+    id: 'ST-2026-00482',
+    address: 'Lic. Carlos Eduardo Mendoza Ramos',
+    city: '+591 71234567 • Tarija, Bolivia',
+    systemType: 'Lenovo ThinkPad E14 Gen 4',
     status: 'Completed',
     price: 450,
-    date: 'Nov 16 2024, 09:00',
+    advancePayment: 0,
+    advancePaid: false,
+    balancePaid: true,
+    fullyPaid: true,
+    date: '05 / 09 / 2026, 11:30',
     techs: 1,
-    desc: 'Fix smart home thermostat interface integration and wall mounting.',
-    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDhhV-nHsqn-fWKVJyZgKFDh0anaN494kDXs5DGtpxkQvF3HqRr_55fuxCr6DpZ5xm929gPa9Jhy2MDEwTn7dKdYbVXWcdAO9i3A3D-G1uL5SExHa4CaWk2g0TBol9rx30e73P8qWYbWFOhEfN3Vj6pEa1XxaEEzUu-AGt_958ukVZzajqSk9HlcQBS80jEZSZp-kOzM3lqjULvoqtu7U0UGj-iWpkij3tDYOsyHJ5GnubvC3AOz9JyZOLcb4OZ9yuMDpUl5rS7HvY',
+    desc: 'Obstrucción por polvo en disipador, pasta térmica degradada, sectores lógicos inconsistentes en sistema operativo y necesidad de mantenimiento preventivo integral y optimización.',
+    image: 'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?auto=format&fit=crop&w=400&q=80',
+    deviceType: 'Computadora Portátil (Laptop)',
+    clientCi: '5489214 Tarija',
+    clientPhone: '+591 71234567',
+    clientCity: 'Tarija, Bolivia',
+    clientAddress: 'Barrio San Martín, Calle Ingavi N° 450',
+    serialNumber: 'PF-3X9K82',
+    processorRam: 'Intel Core i7-1255U / 16 GB DDR4',
+    storage: 'SSD NVMe M.2 512 GB',
+    accessories: 'Cargador original USB-C 65W, funda protectora',
+    issueReason: 'Equipo presenta sobrecalentamiento, apagado repentino y lentitud generalizada en arranque del SO.',
+    diagnosis: 'Obstrucción por polvo en disipador, pasta térmica degradada, sectores lógicos inconsistentes en sistema operativo y necesidad de mantenimiento preventivo integral y optimización.',
+    finalStatus: 'OPERATIVO AL 100% — Pruebas de estrés térmico superadas (temperatura máx. 68°C bajo carga). Sistema operativo reinstalado y actualizado con respaldo de datos intacto.',
+    serviceItems: [
+      {
+        item: 1,
+        desc: 'Mantenimiento preventivo profundo: desensamble, limpieza ultrasónica de ventilador, cambio de pasta térmica de alto rendimiento (Arctic MX-4) y pads térmicos.',
+        qty: 1,
+        unitPrice: 180.00,
+        subtotal: 180.00
+      },
+      {
+        item: 2,
+        desc: 'Optimización de software, formateo limpio, configuración de controladores originales y respaldo de partición de datos (120 GB respaldados con verificación MD5).',
+        qty: 1,
+        unitPrice: 150.00,
+        subtotal: 150.00
+      },
+      {
+        item: 3,
+        desc: 'Licenciamiento antivirus corporativo con protección proactiva y revisión de seguridad perimetral.',
+        qty: 1,
+        unitPrice: 120.00,
+        subtotal: 120.00
+      }
+    ],
+    assignedTech: {
+      name: 'Ing. Milton Berthy Choque Canaviri',
+      role: 'Responsable de Servicio Técnico / Propietario',
+      ci: '7183920 Tarija',
+      img: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=80&q=80'
+    },
+    commonFaults: ['Sobrecalentamiento', 'Apagado repentino', 'Lentitud generalizada', 'Pasta térmica degradada'],
     timeline: [
-      { date: 'Nov 16, 2024', desc: 'Interface fixed and client signed off' }
+      { date: '05/09/2026 09:15', desc: 'Ingreso del equipo: diagnóstico por sobrecalentamiento y lentitud en arranque.' },
+      { date: '05/09/2026 11:00', desc: 'Mantenimiento preventivo profundo y aplicación de pasta térmica Arctic MX-4.' },
+      { date: '05/09/2026 13:30', desc: 'Formateo limpio, controladores originales y respaldo de datos MD5 verificado.' },
+      { date: '05/09/2026 15:00', desc: 'Pruebas térmicas superadas (68°C bajo carga). Constancia y recibo extendido.' }
     ]
   },
   {
-    id: 'WO-1093',
-    address: '47 Spruce Drive',
-    city: 'Quantico, VA',
-    systemType: 'Solar Panel',
-    status: 'Pending',
-    price: 1250,
-    date: 'Nov 15 2024, 08:00',
-    techs: 1,
-    desc: 'Electrical panel wiring and circuits check, testing with a multimeter.',
-    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB7uXpF17MuZpuy13gWeZ3RjPUI_R-ewg5V4DToFLQiGk0O0gJBQh80vyQN6y6XUKTq301MjAM6D583F_SJvB2_7xLpVQHlhU3h4zfxm2Yj2nP18Jf0NdI5ftm8BwomPoZGJohghQpCRU-ilS9nSmir0VtICS6KzZwhgop-2OL7d38d6OoqNmXPHVzfZ2MdmUj-nBHUITE7frvwz80AKdgreBhqrKNJkXs7Kh7LxeN5KF7JHK7eNl77EihHRp5WuKPoNCDysML1c4U',
-    timeline: [
-      { date: 'Nov 15, 2024', desc: 'Dispatched ticket and diagnostic started' }
-    ]
-  },
-  {
-    id: 'WO-1092',
-    address: '319 Haul Road',
-    city: 'Glenrock, WY 12345',
-    systemType: 'HVAC Central',
+    id: 'ST-2026-00483',
+    address: 'Ing. Roberto Siles Benítez',
+    city: '+591 72981234 • Tarija, Bolivia',
+    systemType: 'Asus TUF Gaming F15',
     status: 'In Progress',
-    price: 5750,
-    date: 'Nov 18 2024, 17:00',
-    techs: 2,
-    desc: 'Installation of the new industrial air conditioning system and testing QA on coolant lines.',
-    image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCFPeDHWNHEGUXGNcZrvmZtdtberHqLbCSv68evZEJ_ZOkDlCuHwsCI4iuNofeeBlwEA7B9aIDzwOg65z60gTlnDmApJPhlTrpf8WUM-y8DukTqjB6Yr9WQPDvwFUuXYdFVSCcsXxGNPBOlLrpeKecYytyaDwYXIEbn95clm2fHzjbnyWP9MYuox2K8rgCaxxp_MLIu7BUe4ZJTwat8vtXxvx1ybHOZnw56tLYLO4CNaDEYmJWv5h-Tco6n-lQmhVQTwDMF1yFyeRQ',
+    price: 850,
+    advancePayment: 400,
+    advancePaid: true,
+    balancePaid: false,
+    fullyPaid: false,
+    date: '05 / 09 / 2026, 15:45',
+    techs: 1,
+    desc: 'Cambio de módulo de pantalla IPS 144Hz y reparación de bisagra izquierda.',
+    image: 'https://images.unsplash.com/photo-1603302576837-37561b2e2302?auto=format&fit=crop&w=400&q=80',
+    deviceType: 'Computadora Portátil (Laptop)',
+    clientCi: '6128491 Tarija',
+    clientPhone: '+591 72981234',
+    clientCity: 'Tarija, Bolivia',
+    clientAddress: 'Barrio El Molino, Calle Bolívar N° 780',
+    serialNumber: 'SN-ASUS9921',
+    processorRam: 'AMD Ryzen 7 6800H / 16 GB DDR5',
+    storage: 'SSD NVMe 1 TB',
+    accessories: 'Cargador 240W original',
+    issueReason: 'Pantalla con líneas verticales tras caída leve; bisagra quebrada.',
+    diagnosis: 'Panel LCD fisurado internamente, requiere reemplazo de display 144Hz y anclaje de bisagra.',
+    finalStatus: 'EN PROCESO — Repuesto en montaje y calibración.',
+    assignedTech: {
+      name: 'Ing. Milton Berthy Choque Canaviri',
+      role: 'Responsable de Servicio Técnico / Propietario',
+      ci: '7183920 Tarija',
+      img: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=80&q=80'
+    },
+    commonFaults: ['Pantalla rota', 'Bisagra dañada'],
     timeline: [
-      { date: 'Nov 17, 2024', desc: 'Installation of the new industrial air conditioning system' },
-      { date: 'Nov 17, 2024', desc: 'Testing and quality assurance on coolant lines' }
+      { date: '05/09/2026 15:45', desc: 'Ingreso a taller. Se recibe anticipo de Bs. 400 en POS.' },
+      { date: '05/09/2026 17:30', desc: 'Desensamble de carcasa superior y preparación de pantalla nueva.' }
+    ]
+  },
+  {
+    id: 'ST-2026-00484',
+    address: 'Dra. Marcela Fernández Paz',
+    city: '+591 71890123 • Tarija, Bolivia',
+    systemType: 'MacBook Air M1 13"',
+    status: 'Pending',
+    price: 320,
+    advancePayment: 0,
+    advancePaid: false,
+    balancePaid: false,
+    fullyPaid: false,
+    date: '05 / 09 / 2026, 17:10',
+    techs: 1,
+    desc: 'Limpieza de conector USB-C, diagnóstico de batería y mantenimiento térmico.',
+    image: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=400&q=80',
+    deviceType: 'Computadora Portátil (Laptop)',
+    clientCi: '4829104 Tarija',
+    clientPhone: '+591 71890123',
+    clientCity: 'Tarija, Bolivia',
+    clientAddress: 'Av. Las Américas N° 320',
+    serialNumber: 'C02F83LKQ05D',
+    processorRam: 'Apple M1 / 8 GB Unified',
+    storage: 'SSD 256 GB',
+    accessories: 'Cargador MagSafe original',
+    issueReason: 'Puerto USB-C izquierdo intermitente y calentamiento en reposo.',
+    diagnosis: 'Sulfatación leve en pines de puerto de carga tipo C y pelusa interna.',
+    finalStatus: 'PENDIENTE — En espera de aprobación de presupuesto.',
+    assignedTech: {
+      name: 'Ing. Milton Berthy Choque Canaviri',
+      role: 'Responsable de Servicio Técnico / Propietario',
+      ci: '7183920 Tarija',
+      img: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=80&q=80'
+    },
+    commonFaults: ['Puerto flojo / intermitente', 'Sobrecalentamiento'],
+    timeline: [
+      { date: '05/09/2026 17:10', desc: 'Ticket emitido. En cola de diagnóstico por técnico.' }
     ]
   }
 ];
@@ -201,7 +296,7 @@ export const AppProvider = ({ children }) => {
   const [users, setUsers] = useState([
     { id: 'usr-1', email: 'admin@sistech.com', password: 'admin123', name: 'Alex Sterling', role: 'admin', status: 'active', avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80', date: '24/06/2026' },
     { id: 'usr-2', email: 'cajero@sistech.com', password: 'cajero123', name: 'Hamilton Cortez', role: 'cajero', status: 'active', avatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=80&q=80', date: '24/06/2026' },
-    { id: 'usr-3', email: 'tecnico@sistech.com', password: 'tecnico123', name: 'Deanna Annis', role: 'tecnico', status: 'active', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=80&q=80', date: '24/06/2026' }
+    { id: 'usr-3', email: 'tecnico@sistech.com', password: 'tecnico123', name: 'Ing. Milton Berthy Choque Canaviri', role: 'tecnico', status: 'active', avatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=80&q=80', date: '24/06/2026' }
   ]);
   const [rolePermissions, setRolePermissions] = useState({
     admin: ['dashboard', 'service_registry', 'pos', 'inventory', 'reports', 'settings'],
@@ -209,12 +304,15 @@ export const AppProvider = ({ children }) => {
     tecnico: ['dashboard', 'service_registry']
   });
   const [shopInfo, setShopInfo] = useState({
-    name: 'HITECH POS',
-    ruc: '20748392018',
-    address: 'Av. Aviación 1482, San Borja',
-    phone: '(01) 224-8594 / 942-597-869',
-    warranty: 'Garantía de servicio: 30 días en mano de obra. No cubre daños físicos ni líquidos.',
-    weatherLocation: 'Lima, PE'
+    name: 'SERVICIO TÉCNICO ESPECIALIZADO',
+    subtitle: 'Soporte Informático, Reparación y Mantenimiento Electrónico',
+    activity: 'Servicios Profesionales de Tecnología y Soporte de Hardware/Software',
+    ruc: '7183920 Tarija',
+    address: 'Av. Principal #1234, Zona Central',
+    phone: '+591 70000000',
+    email: 'soporte.tecnico@contacto.com',
+    warranty: 'Garantía técnica de 60 (sesenta) días calendario a partir de la emisión.',
+    weatherLocation: 'Tarija, BO'
   });
   const [activityLogs, setActivityLogs] = useState([]);
   
@@ -431,9 +529,24 @@ export const AppProvider = ({ children }) => {
 
   // Static Team and Tasks state
   const [onDutyTeam, setOnDutyTeam] = useState([
-    { name: 'Deanna Annis', role: 'Lead Technician', img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAWS-DL1itB-ehhEbpvCyARjpoyIsDlkB4hC6HkXD7cUteNw_Zdlpgh3xmrIpweVJ9tchVs5Z1LCK6Dv2Wf3WSzi_YpYLHz1psx6dvItGBM6nwbhQUTmgGzDpw43VZxnklVUNAKGe4xlYolqmYpEyUVNOhEYr8oxhctdg-Zyw008hlgS3uEdRBq3WwvNqrgvrYNbM0xqHgp7MSdcbODvuB0Ag5Q47l51P27XrkcTN7jLqR0WOkQuX6Y4bVViFIwUyaazfmu-t8Bamo' },
-    { name: 'Andrea Willis', role: 'Systems Engineer', img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBwU3dL4nOZM7mYrt8Advhy9F6hRwhQDbiXDQncVbshASj_HtJvrpXJMS7VZLMidW8L2lu75u4wT075vjpLZAm-cCEMIQGufjoZ7lsS2MnD9ciR6aaB2LhGeHcfFEZ3HsEZrvtx1vm_JW19VjFtCXbMaIVMnopC-924l-LUb3doED0GPaDOJiC2iR8RC5-CRddF7DG-6OozmHS4KfJVopUQa-voJJz1WhW-BinhSEPz794_oQwTE036DjJaNtcxiAeU382CrMb7BQo' },
-    { name: 'Brent Rodrigues', role: 'Inventory Specialist', img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCEHAcsQkSq-XpI2d6XOc-7iOtomUETH1UpjTV8pe4IAh3loaesmtSGwC5TnTximhqRXuI64lGMnqVQeJnHWc4pBtkET4i5HJVAqx8_wevfhSRIiB2G4P8-mKzebRjXsQTzPB6qIyl-iSxgO3iE7B6uZQQfAIAvbltg697t3oqMEnwg7OuJ6hJlqrOfvfQA-PoSY9LKMLZESfuZc2OJkZFOzPJk2u0-nu3a8SjaOccOMIooghhYHfCJI_k3uVQcSNOtUc_A8m0r3D4' }
+    { 
+      name: 'Ing. Milton Berthy Choque Canaviri', 
+      role: 'Responsable de Servicio Técnico / Propietario', 
+      ci: '7183920 Tarija',
+      img: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=80&q=80' 
+    },
+    { 
+      name: 'Hamilton Cortez', 
+      role: 'Cajero / Atención Comercial', 
+      ci: '5489001 Tarija',
+      img: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80' 
+    },
+    { 
+      name: 'Alex Sterling', 
+      role: 'Administrador General', 
+      ci: '7123990 Tarija',
+      img: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=80&q=80' 
+    }
   ]);
 
   const [urgentTasks, setUrgentTasks] = useState([
@@ -759,26 +872,46 @@ export const AppProvider = ({ children }) => {
 
   // Add service ticket directly to Supabase & State
   const addServiceTicket = async (ticketData) => {
-    const newId = ticketData.id || `WO-${Math.floor(1000 + Math.random() * 9000)}`;
+    const nextNum = String(Math.floor(100 + Math.random() * 900));
+    const newId = ticketData.id || `ST-2026-00${nextNum}`;
     const ticket = {
       id: newId,
-      address: ticketData.customerName,
-      city: ticketData.phone,
-      systemType: ticketData.systemType || `${ticketData.brand} ${ticketData.model}`,
+      address: ticketData.customerName || 'Lic. Carlos Eduardo Mendoza Ramos',
+      city: ticketData.phone ? `${ticketData.phone} • ${ticketData.city || 'Tarija, Bolivia'}` : '+591 71234567 • Tarija, Bolivia',
+      systemType: ticketData.systemType || `${ticketData.brand || 'Lenovo'} ${ticketData.model || 'ThinkPad E14 Gen 4'}`.trim(),
       status: ticketData.status || 'Pending',
-      price: parseFloat(ticketData.estimate) || 0,
+      price: parseFloat(ticketData.estimate) || 450,
       advancePayment: parseFloat(ticketData.advancePayment) || 0,
       advancePaid: (parseFloat(ticketData.advancePayment) || 0) > 0 ? false : true,
       balancePaid: false,
       fullyPaid: false,
       paymentHistory: [],
-      date: ticketData.date || new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' }) + `, ${new Date().getHours()}:${new Date().getMinutes()}`,
+      date: ticketData.date || new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }) + `, ${new Date().getHours()}:${String(new Date().getMinutes()).padStart(2, '0')}`,
       techs: 1,
-      desc: ticketData.issue || 'Diagnostic pending.',
-      commonFaults: ticketData.commonFaults || [],
-      image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB7uXpF17MuZpuy13gWeZ3RjPUI_R-ewg5V4DToFLQiGk0O0gJBQh80vyQN6y6XUKTq301MjAM6D583F_SJvB2_7xLpVQHlhU3h4zfxm2Yj2nP18Jf0NdI5ftm8BwomPoZGJohghQpCRU-ilS9nSmir0VtICS6KzZwhgop-2OL7d38d6OoqNmXPHVzfZ2MdmUj-nBHUITE7frvwz80AKdgreBhqrKNJkXs7Kh7LxeN5KF7JHK7eNl77EihHRp5WuKPoNCDysML1c4U',
+      desc: ticketData.issue || ticketData.diagnosis || 'Obstrucción por polvo en disipador, pasta térmica degradada y optimización integral.',
+      commonFaults: ticketData.commonFaults || ['Sobrecalentamiento', 'Lentitud generalizada'],
+      image: ticketData.image || 'https://images.unsplash.com/photo-1588872657578-7efd1f1555ed?auto=format&fit=crop&w=400&q=80',
+      clientCi: ticketData.ciNit || ticketData.clientCi || '5489214 Tarija',
+      clientPhone: ticketData.phone || '+591 71234567',
+      clientCity: ticketData.city || 'Tarija, Bolivia',
+      clientAddress: ticketData.clientAddress || 'Barrio San Martín, Calle Ingavi N° 450',
+      deviceType: ticketData.deviceType || 'Computadora Portátil (Laptop)',
+      brandModel: ticketData.brandModel || (ticketData.brand ? `${ticketData.brand} ${ticketData.model}` : 'Lenovo ThinkPad E14 Gen 4'),
+      serialNumber: ticketData.serialNumber || 'PF-3X9K82',
+      processorRam: ticketData.processorRam || 'Intel Core i7-1255U / 16 GB DDR4',
+      storage: ticketData.storage || 'SSD NVMe M.2 512 GB',
+      accessories: ticketData.accessories || 'Cargador original USB-C 65W, funda protectora',
+      issueReason: ticketData.issue || 'Equipo presenta sobrecalentamiento, apagado repentino y lentitud generalizada en arranque del SO.',
+      diagnosis: ticketData.diagnosis || 'Obstrucción por polvo en disipador, pasta térmica degradada, sectores lógicos inconsistentes en sistema operativo y necesidad de mantenimiento preventivo integral y optimización.',
+      finalStatus: ticketData.finalStatus || 'OPERATIVO AL 100% — Pruebas de estrés térmico superadas (temperatura máx. 68°C bajo carga). Sistema operativo reinstalado y actualizado con respaldo de datos intacto.',
+      serviceItems: ticketData.serviceItems || [
+        { item: 1, desc: 'Mantenimiento preventivo profundo: desensamble, limpieza ultrasónica de ventilador, cambio de pasta térmica (Arctic MX-4) y pads.', qty: 1, unitPrice: 180, subtotal: 180 },
+        { item: 2, desc: 'Optimización de software, formateo limpio, controladores originales y respaldo de datos con verificación MD5.', qty: 1, unitPrice: 150, subtotal: 150 },
+        { item: 3, desc: 'Licenciamiento antivirus corporativo con protección proactiva y revisión perimetral.', qty: 1, unitPrice: 120, subtotal: 120 }
+      ],
+      assignedTech: ticketData.assignedTech || onDutyTeam[0],
       timeline: ticketData.timeline || [
-        { date: new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }), desc: 'Ticket registrado. Dispositivo recibido en sucursal.' }
+        { date: new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }), desc: 'Ticket registrado en taller. Dispositivo recibido para diagnóstico.' }
       ]
     };
 

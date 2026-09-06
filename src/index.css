@@ -98,20 +98,26 @@
   background: #c7c5d5;
 }
 
-/* High-fidelity printer styling for thermal receipts */
+/* High-fidelity printer styling for thermal & A4 receipts */
 @media print {
   @page {
-    size: auto;
-    margin: 5mm;
+    size: A4 portrait;
+    margin: 6mm 8mm;
   }
   
-  body {
+  html, body {
     background: #ffffff !important;
     color: #000000 !important;
     padding: 0 !important;
     margin: 0 !important;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Prevent unexpected page splits */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
   /* Hide scrollbars during print */
