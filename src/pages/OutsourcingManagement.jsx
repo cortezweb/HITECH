@@ -9,6 +9,7 @@ export default function OutsourcingManagement() {
     addAgencyTonerStock, 
     requestAgencyRestock, 
     addOutsourcingAgency,
+    consumeAgencyToner,
     shopInfo,
     currentUser 
   } = useApp();
@@ -21,6 +22,7 @@ export default function OutsourcingManagement() {
 
   // Modals state
   const [isDeliveryModalOpen, setIsDeliveryModalOpen] = useState(false);
+  const [isInstallModalOpen, setIsInstallModalOpen] = useState(false);
   const [isNewAgencyModalOpen, setIsNewAgencyModalOpen] = useState(false);
   const [currentReceiptData, setCurrentReceiptData] = useState(null);
   const [activeTab, setActiveTab] = useState('split'); // 'split', 'map', 'list'
@@ -101,6 +103,33 @@ export default function OutsourcingManagement() {
     technician: 'Ing. Milton Berthy Choque Canaviri',
     notes: 'Entrega regular según contrato de reposición preventiva.'
   });
+
+  // State for installing / consuming toner in a printer
+  const [installForm, setInstallForm] = useState({
+    tonerId: '',
+    printerModel: '',
+    installedBy: '',
+    notes: 'Sustitución de cartucho agotado en impresora.',
+    quantity: 1
+  });
+
+  const handleInstallToner = (e) => {
+    e.preventDefault();
+    if (!selectedAgency || !installForm.tonerId) return;
+
+    const success = consumeAgencyToner(
+      selectedAgency.id,
+      installForm.tonerId,
+      installForm.printerModel,
+      installForm.installedBy || currentUser?.name || 'Personal de Agencia',
+      installForm.notes,
+      parseInt(installForm.quantity, 10) || 1
+    );
+
+    if (success) {
+      setIsInstallModalOpen(false);
+    }
+  };
 
   // State for new agency form
   const [newAgencyForm, setNewAgencyForm] = useState({
@@ -631,7 +660,26 @@ export default function OutsourcingManagement() {
                 className="px-4 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl text-xs font-bold shadow-md shadow-primary/20 flex items-center gap-2 transition-all cursor-pointer"
               >
                 <span className="material-symbols-outlined text-[18px]">local_shipping</span>
-                <span>+ Entregar Tóners en Agencia</span>
+                <span>+ Entregar Tóners</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  const firstAvailable = selectedAgency.toners?.find(t => t.currentStock > 0) || selectedAgency.toners?.[0];
+                  setInstallForm({
+                    tonerId: firstAvailable?.id || '',
+                    printerModel: selectedAgency.printers?.[0]?.model || firstAvailable?.compatiblePrinter || '',
+                    installedBy: currentUser?.name || 'Personal de Agencia',
+                    notes: 'Sustitución de cartucho agotado en impresora.',
+                    quantity: 1
+                  });
+                  setIsInstallModalOpen(true);
+                }}
+                className="px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold shadow-md shadow-amber-500/20 flex items-center gap-2 transition-all cursor-pointer"
+                title="Registrar que se sacó un cartucho del armario de reserva y se colocó en la impresora"
+              >
+                <span className="material-symbols-outlined text-[18px]">swap_vert</span>
+                <span>- Instalar en Impresora</span>
               </button>
 
               <button
@@ -670,6 +718,7 @@ export default function OutsourcingManagement() {
                       <th className="py-2.5 px-3 text-center">Rendimiento</th>
                       <th className="py-2.5 px-3 text-center">Stock Reserva</th>
                       <th className="py-2.5 px-3 text-center">Estado</th>
+                      <th className="py-2.5 px-3 text-center">Acción</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-outline-variant/15">
@@ -723,6 +772,30 @@ export default function OutsourcingManagement() {
                               </span>
                             )}
                           </td>
+                          <td className="py-3 px-3 text-center">
+                            <button
+                              disabled={isZero}
+                              onClick={() => {
+                                setInstallForm({
+                                  tonerId: t.id,
+                                  printerModel: t.compatiblePrinter || selectedAgency.printers?.[0]?.model || '',
+                                  installedBy: currentUser?.name || 'Personal de Agencia',
+                                  notes: 'Sustitución de cartucho agotado en impresora.',
+                                  quantity: 1
+                                });
+                                setIsInstallModalOpen(true);
+                              }}
+                              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1 mx-auto ${
+                                isZero 
+                                  ? 'bg-slate-100 text-slate-400 cursor-not-allowed' 
+                                  : 'bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200/60 cursor-pointer shadow-sm active:scale-95'
+                              }`}
+                              title={isZero ? 'Sin stock para instalar' : 'Instalar cartucho en la impresora (descuenta 1 del stock)'}
+                            >
+                              <span className="material-symbols-outlined text-[14px]">swap_vert</span>
+                              <span>Instalar</span>
+                            </button>
+                          </td>
                         </tr>
                       );
                     })}
@@ -772,6 +845,46 @@ export default function OutsourcingManagement() {
                   </div>
                 )}
               </div>
+
+              {/* Toner Change / Installation History */}
+              <div className="pt-4 border-t border-outline-variant/20">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="material-symbols-outlined text-amber-600 text-[18px]">published_with_changes</span>
+                    <h4 className="font-extrabold text-xs uppercase tracking-wider text-slate-600">
+                      Historial de Tóners Instalados en Equipos (Consumo Real)
+                    </h4>
+                  </div>
+                </div>
+
+                {(selectedAgency.changeHistory || []).length === 0 ? (
+                  <p className="text-xs text-slate-400 italic p-3 bg-surface-container-low rounded-xl">
+                    No se registran cambios de tóner aún en esta agencia.
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    {selectedAgency.changeHistory.map((c, idx) => (
+                      <div key={idx} className="p-3 bg-amber-50/40 rounded-xl border border-amber-200/50 flex items-center justify-between text-xs">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-extrabold text-amber-900">
+                              - {c.quantity} un. {c.tonerModel}
+                            </span>
+                            <span className="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-bold">
+                              Instalado en: {c.printerModel}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-slate-500 mt-1">
+                            Fecha: {c.date} • Responsable: <strong>{c.installedBy}</strong>
+                            {c.notes && <span className="text-slate-400 italic"> — "{c.notes}"</span>}
+                          </p>
+                        </div>
+                        <span className="material-symbols-outlined text-amber-600 text-[20px]">check_circle</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* 2. Flota de Impresoras & Contacto en Sucursal */}
@@ -812,6 +925,147 @@ export default function OutsourcingManagement() {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Registrar Cambio / Instalación de Tóner */}
+      {isInstallModalOpen && selectedAgency && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-surface-container-lowest rounded-3xl p-6 w-full max-w-lg shadow-2xl border border-outline-variant/30">
+            <div className="flex items-center justify-between pb-4 mb-4 border-b border-outline-variant/20">
+              <div className="flex items-center gap-2">
+                <div className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center">
+                  <span className="material-symbols-outlined text-[20px]">build_circle</span>
+                </div>
+                <div>
+                  <h3 className="font-black text-base text-on-surface">Instalar Tóner en Impresora</h3>
+                  <p className="text-xs text-slate-400">Descuenta 1 unidad de la reserva de {selectedAgency.agencyName}</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setIsInstallModalOpen(false)}
+                className="text-slate-400 hover:text-slate-600 cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[20px]">close</span>
+              </button>
+            </div>
+
+            <form onSubmit={handleInstallToner} className="space-y-4">
+              <div className="p-3 bg-amber-50/60 rounded-xl border border-amber-200 text-xs text-amber-900 flex items-start gap-2">
+                <span className="material-symbols-outlined text-[18px] text-amber-600 flex-shrink-0">info</span>
+                <span>
+                  Al confirmar, el cartucho se registrará como instalado en la impresora y se descontará del stock de reserva de la sucursal, recalculando inmediatamente el semáforo en el mapa.
+                </span>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-500 mb-1.5">
+                  Modelo de Tóner a Instalar *
+                </label>
+                <select
+                  required
+                  value={installForm.tonerId}
+                  onChange={(e) => {
+                    const toner = selectedAgency.toners?.find(t => t.id === e.target.value);
+                    setInstallForm({
+                      ...installForm,
+                      tonerId: e.target.value,
+                      printerModel: toner?.compatiblePrinter || installForm.printerModel
+                    });
+                  }}
+                  className="w-full px-3 py-2.5 bg-surface-container-low border border-outline-variant/30 rounded-xl text-xs font-bold text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
+                >
+                  <option value="">-- Seleccione el modelo --</option>
+                  {(selectedAgency.toners || []).map(t => (
+                    <option key={t.id} value={t.id} disabled={t.currentStock === 0}>
+                      {t.model} ({t.color}) - Stock en reserva: {t.currentStock} un. {t.currentStock === 0 ? '(AGOTADO)' : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 mb-1.5">
+                    Impresora de Destino *
+                  </label>
+                  <select
+                    value={installForm.printerModel}
+                    onChange={(e) => setInstallForm({ ...installForm, printerModel: e.target.value })}
+                    className="w-full px-3 py-2.5 bg-surface-container-low border border-outline-variant/30 rounded-xl text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
+                  >
+                    {(selectedAgency.printers || []).map((p, idx) => (
+                      <option key={idx} value={`${p.model} (${p.location})`}>
+                        {p.model} - {p.location}
+                      </option>
+                    ))}
+                    <option value="Otra impresora de la agencia">Otra impresora de la agencia</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 mb-1.5">
+                    Cantidad Utilizada *
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="10"
+                    required
+                    value={installForm.quantity}
+                    onChange={(e) => setInstallForm({ ...installForm, quantity: e.target.value })}
+                    className="w-full px-3 py-2.5 bg-surface-container-low border border-outline-variant/30 rounded-xl text-xs font-mono font-bold text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 mb-1.5">
+                    Responsable del Cambio *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="ej. Carlos Mendoza (Cajero)"
+                    value={installForm.installedBy}
+                    onChange={(e) => setInstallForm({ ...installForm, installedBy: e.target.value })}
+                    className="w-full px-3 py-2.5 bg-surface-container-low border border-outline-variant/30 rounded-xl text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 mb-1.5">
+                    Notas / Contador de Páginas
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="ej. Contador: 45,120 págs"
+                    value={installForm.notes}
+                    onChange={(e) => setInstallForm({ ...installForm, notes: e.target.value })}
+                    className="w-full px-3 py-2.5 bg-surface-container-low border border-outline-variant/30 rounded-xl text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-outline-variant/15">
+                <button
+                  type="button"
+                  onClick={() => setIsInstallModalOpen(false)}
+                  className="px-4 py-2.5 bg-surface-container text-slate-600 rounded-xl text-xs font-bold hover:bg-surface-container-high transition-colors cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold shadow-md shadow-amber-500/25 flex items-center gap-1.5 cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-[16px]">check_circle</span>
+                  <span>Confirmar Cambio de Tóner</span>
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

@@ -1334,6 +1334,80 @@ export const AppProvider = ({ children }) => {
     setOutsourcingAgencies(prev => prev.map(a => a.id === agencyId ? { ...a, ...fields } : a));
   };
 
+  // Consume / Install Toner in Printer (deduct from agency backup reserve)
+  const consumeAgencyToner = async (agencyId, tonerId, printerModel, installedBy, notes, qty = 1) => {
+    let success = false;
+    let errorMsg = '';
+
+    setOutsourcingAgencies(prev => prev.map(agency => {
+      if (agency.id !== agencyId) return agency;
+
+      const matchedToner = agency.toners?.find(t => t.id === tonerId);
+      if (!matchedToner) {
+        errorMsg = 'Modelo de tóner no encontrado en la agencia.';
+        return agency;
+      }
+
+      const qtyToConsume = parseInt(qty, 10) || 1;
+      if (matchedToner.currentStock < qtyToConsume) {
+        errorMsg = `Stock de contingencia insuficiente. La agencia solo cuenta con ${matchedToner.currentStock} unidad(es) de reserva.`;
+        return agency;
+      }
+
+      success = true;
+
+      const updatedToners = agency.toners.map(t => {
+        if (t.id === tonerId) {
+          return { ...t, currentStock: Math.max(0, t.currentStock - qtyToConsume) };
+        }
+        return t;
+      });
+
+      // Recalculate status
+      const totalBackup = updatedToners.reduce((s, t) => s + t.currentStock, 0);
+      const hasZero = updatedToners.some(t => t.currentStock === 0);
+      const hasLow = updatedToners.some(t => t.currentStock <= t.minStock);
+
+      let newStatus = 'optimo';
+      if (totalBackup === 0 || hasZero) newStatus = 'critico';
+      else if (totalBackup <= 2 || hasLow) newStatus = 'alerta';
+
+      const changeRecord = {
+        id: `CHG-${Date.now()}`,
+        date: new Date().toLocaleDateString('es-ES') + ', ' + new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
+        tonerModel: matchedToner.model,
+        color: matchedToner.color,
+        quantity: qtyToConsume,
+        printerModel: printerModel || matchedToner.compatiblePrinter,
+        installedBy: installedBy || 'Personal de Agencia',
+        notes: notes || 'Sustitución de cartucho agotado en impresora.'
+      };
+
+      const updatedAgency = {
+        ...agency,
+        toners: updatedToners,
+        status: newStatus,
+        changeHistory: [changeRecord, ...(agency.changeHistory || [])]
+      };
+
+      if (isSupabaseConfigured && supabase) {
+        supabase.from('outsourcing_agencies').upsert(updatedAgency).catch(console.warn);
+      }
+
+      logActivity(
+        'Cambio de Tóner',
+        `Se instaló ${qtyToConsume} un. de ${matchedToner.model} en ${printerModel || agency.agencyName} (${agency.clientName}). Reserva restante: ${matchedToner.currentStock - qtyToConsume} un.`
+      );
+
+      return updatedAgency;
+    }));
+
+    if (!success && errorMsg) {
+      alert(errorMsg);
+    }
+    return success;
+  };
+
   return (
     <AppContext.Provider value={{
       page,
@@ -1386,7 +1460,8 @@ export const AppProvider = ({ children }) => {
       addAgencyTonerStock,
       requestAgencyRestock,
       addOutsourcingAgency,
-      updateAgency
+      updateAgency,
+      consumeAgencyToner
     }}>
       {children}
     </AppContext.Provider>
