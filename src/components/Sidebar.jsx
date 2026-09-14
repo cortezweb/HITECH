@@ -9,6 +9,7 @@ export default function Sidebar() {
 
   const allNavItems = [
     { id: 'dashboard', icon: 'dashboard', label: 'Dashboard' },
+    { id: 'outsourcing', icon: 'hub', label: 'Outsourcing Tóners' },
     { id: 'service_registry', icon: 'assignment', label: 'Soporte Técnico' },
     { id: 'pos', icon: 'point_of_sale', label: 'Terminal POS' },
     { id: 'inventory', icon: 'inventory_2', label: 'Inventario' },

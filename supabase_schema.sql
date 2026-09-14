@@ -117,6 +117,29 @@ CREATE TABLE IF NOT EXISTS activity_logs (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- 9. OUTSOURCING_AGENCIES (Agencias y Sucursales para Monitoreo de Tóners)
+CREATE TABLE IF NOT EXISTS outsourcing_agencies (
+    id VARCHAR(50) PRIMARY KEY,
+    clientId TEXT NOT NULL,
+    clientName TEXT NOT NULL,
+    clientCode TEXT NOT NULL,
+    agencyName TEXT NOT NULL,
+    city TEXT NOT NULL,
+    address TEXT NOT NULL,
+    lat NUMERIC(10, 6) NOT NULL,
+    lng NUMERIC(10, 6) NOT NULL,
+    contactPerson TEXT,
+    contactPhone TEXT,
+    contactEmail TEXT,
+    status TEXT DEFAULT 'optimo',
+    lastReplenished TEXT,
+    printers JSONB DEFAULT '[]'::jsonb,
+    toners JSONB DEFAULT '[]'::jsonb,
+    deliveryHistory JSONB DEFAULT '[]'::jsonb,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- Habilitar Row Level Security (RLS)
 ALTER TABLE products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tickets ENABLE ROW LEVEL SECURITY;
@@ -126,6 +149,7 @@ ALTER TABLE config ENABLE ROW LEVEL SECURITY;
 ALTER TABLE attendance ENABLE ROW LEVEL SECURITY;
 ALTER TABLE cierres_caja ENABLE ROW LEVEL SECURITY;
 ALTER TABLE activity_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE outsourcing_agencies ENABLE ROW LEVEL SECURITY;
 
 -- Políticas de acceso para clave pública anónima (anon key)
 CREATE POLICY "Public full access products" ON products FOR ALL USING (true) WITH CHECK (true);
@@ -136,6 +160,7 @@ CREATE POLICY "Public full access config" ON config FOR ALL USING (true) WITH CH
 CREATE POLICY "Public full access attendance" ON attendance FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Public full access cierres_caja" ON cierres_caja FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Public full access activity_logs" ON activity_logs FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Public full access outsourcing_agencies" ON outsourcing_agencies FOR ALL USING (true) WITH CHECK (true);
 
 -- Habilitar Realtime para suscripciones en vivo
 ALTER PUBLICATION supabase_realtime ADD TABLE products;
@@ -146,20 +171,22 @@ ALTER PUBLICATION supabase_realtime ADD TABLE config;
 ALTER PUBLICATION supabase_realtime ADD TABLE attendance;
 ALTER PUBLICATION supabase_realtime ADD TABLE cierres_caja;
 ALTER PUBLICATION supabase_realtime ADD TABLE activity_logs;
+ALTER PUBLICATION supabase_realtime ADD TABLE outsourcing_agencies;
 
 -- Datos Semilla Iniciales: Usuarios
 INSERT INTO users (id, email, password, name, role, status, avatar, date)
 VALUES
     ('usr-1', 'admin@sistech.com', 'admin123', 'Alex Sterling', 'admin', 'active', 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80', '24/06/2026'),
     ('usr-2', 'cajero@sistech.com', 'cajero123', 'Hamilton Cortez', 'cajero', 'active', 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=80&q=80', '24/06/2026'),
-    ('usr-3', 'tecnico@sistech.com', 'tecnico123', 'Ing. Milton Berthy Choque Canaviri', 'tecnico', 'active', 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=80&q=80', '24/06/2026')
+    ('usr-3', 'tecnico@sistech.com', 'tecnico123', 'Ing. Milton Berthy Choque Canaviri', 'tecnico', 'active', 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=80&q=80', '24/06/2026'),
+    ('usr-4', 'banco.union@outsourcing.com', 'banco123', 'Supervisión Banco Unión', 'cliente_outsourcing', 'active', 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=80&q=80', '14/09/2026')
 ON CONFLICT (id) DO NOTHING;
 
 -- Datos Semilla Iniciales: Configuración
 INSERT INTO config (id, data)
 VALUES
     ('shopInfo', '{"name": "SERVICIO TÉCNICO ESPECIALIZADO", "subtitle": "Soporte Informático, Reparación y Mantenimiento Electrónico", "activity": "Servicios Profesionales de Tecnología y Soporte de Hardware/Software", "ruc": "7183920 Tarija", "address": "Av. Principal #1234, Zona Central", "phone": "+591 70000000", "email": "soporte.tecnico@contacto.com", "warranty": "Garantía técnica de 60 (sesenta) días calendario a partir de la emisión.", "weatherLocation": "Tarija, BO"}'::jsonb),
-    ('rolePermissions', '{"admin": ["dashboard", "service_registry", "pos", "inventory", "reports", "settings"], "cajero": ["dashboard", "pos"], "tecnico": ["dashboard", "service_registry"]}'::jsonb)
+    ('rolePermissions', '{"admin": ["dashboard", "outsourcing", "service_registry", "pos", "inventory", "reports", "settings"], "cajero": ["dashboard", "pos"], "tecnico": ["dashboard", "service_registry"], "cliente_outsourcing": ["outsourcing"]}'::jsonb)
 ON CONFLICT (id) DO NOTHING;
 
 -- Datos Semilla Iniciales: Órdenes de Servicio Técnico (Tickets)

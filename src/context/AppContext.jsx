@@ -274,6 +274,299 @@ const initialMockTickets = [
   }
 ];
 
+export const initialMockOutsourcingAgencies = [
+  {
+    id: 'AG-BU-01',
+    clientId: 'CLI-BANCO-UNION',
+    clientName: 'Banco Unión S.A.',
+    clientCode: 'BUN',
+    agencyName: 'Agencia Central Tarija',
+    city: 'Tarija',
+    address: 'Calle Sucre esq. 15 de Abril N° 450, Zona Central',
+    lat: -21.5332,
+    lng: -64.7339,
+    contactPerson: 'Lic. Mariana Valdez (Jefe Operativo)',
+    contactPhone: '+591 71829304',
+    contactEmail: 'mvaldez@bancounion.com.bo',
+    status: 'optimo',
+    lastReplenished: '10/09/2026',
+    printers: [
+      { model: 'HP LaserJet Enterprise M507dn', location: 'Cajas 1 a 4', serial: 'HP-M507-01' },
+      { model: 'Kyocera ECOSYS P3155dn', location: 'Plataforma de Atención', serial: 'KYO-P3155-08' },
+      { model: 'HP Color LaserJet Pro M454dw', location: 'Gerencia Regional', serial: 'HP-M454-02' }
+    ],
+    toners: [
+      {
+        id: 'TON-89A',
+        model: 'HP 89A (CF289A)',
+        color: 'Negro',
+        yieldPages: '5,000 págs',
+        currentStock: 4,
+        minStock: 2,
+        compatiblePrinter: 'HP LaserJet M507dn'
+      },
+      {
+        id: 'TON-TK3182',
+        model: 'Kyocera TK-3182',
+        color: 'Negro',
+        yieldPages: '21,000 págs',
+        currentStock: 3,
+        minStock: 1,
+        compatiblePrinter: 'Kyocera ECOSYS P3155dn'
+      },
+      {
+        id: 'TON-414A-K',
+        model: 'HP 414A Negro',
+        color: 'Negro',
+        yieldPages: '2,400 págs',
+        currentStock: 2,
+        minStock: 1,
+        compatiblePrinter: 'HP LaserJet M454dw'
+      }
+    ],
+    deliveryHistory: [
+      {
+        id: 'REM-2026-089',
+        date: '10/09/2026',
+        technician: 'Ing. Milton Berthy Choque Canaviri',
+        tonersDelivered: [
+          { model: 'HP 89A (CF289A)', color: 'Negro', compatiblePrinter: 'HP LaserJet M507dn', quantity: 2 },
+          { model: 'Kyocera TK-3182', color: 'Negro', compatiblePrinter: 'Kyocera ECOSYS P3155dn', quantity: 1 }
+        ],
+        receiver: 'Lic. Mariana Valdez',
+        notes: 'Reposición programada mensual según contrato SLA.'
+      }
+    ]
+  },
+  {
+    id: 'AG-BU-02',
+    clientId: 'CLI-BANCO-UNION',
+    clientName: 'Banco Unión S.A.',
+    clientCode: 'BUN',
+    agencyName: 'Sucursal Mercado Campesino',
+    city: 'Tarija',
+    address: 'Av. Froilán Tejerina e/ C. Pantoja N° 1280',
+    lat: -21.5245,
+    lng: -64.7210,
+    contactPerson: 'Ing. Roberto Gallardo (Supervisor)',
+    contactPhone: '+591 72983411',
+    contactEmail: 'rgallardo@bancounion.com.bo',
+    status: 'critico',
+    lastReplenished: '18/08/2026',
+    printers: [
+      { model: 'HP LaserJet Pro M404dn', location: 'Cajas Recaudación', serial: 'HP-M404-03' },
+      { model: 'Kyocera ECOSYS P3155dn', location: 'Créditos & Microfinanzas', serial: 'KYO-P3155-12' }
+    ],
+    toners: [
+      {
+        id: 'TON-58A',
+        model: 'HP 58A (CF258A)',
+        color: 'Negro',
+        yieldPages: '3,000 págs',
+        currentStock: 0,
+        minStock: 2,
+        compatiblePrinter: 'HP LaserJet Pro M404dn'
+      },
+      {
+        id: 'TON-TK3182-2',
+        model: 'Kyocera TK-3182',
+        color: 'Negro',
+        yieldPages: '21,000 págs',
+        currentStock: 0,
+        minStock: 1,
+        compatiblePrinter: 'Kyocera ECOSYS P3155dn'
+      }
+    ],
+    deliveryHistory: [
+      {
+        id: 'REM-2026-071',
+        date: '18/08/2026',
+        technician: 'Ing. Milton Berthy Choque Canaviri',
+        tonersDelivered: [
+          { model: 'HP 58A (CF258A)', color: 'Negro', compatiblePrinter: 'HP LaserJet Pro M404dn', quantity: 2 }
+        ],
+        receiver: 'Ing. Roberto Gallardo',
+        notes: 'Entrega estándar de reserva.'
+      }
+    ]
+  },
+  {
+    id: 'AG-BU-03',
+    clientId: 'CLI-BANCO-UNION',
+    clientName: 'Banco Unión S.A.',
+    clientCode: 'BUN',
+    agencyName: 'Agencia Senac / Los Ceibos',
+    city: 'Tarija',
+    address: 'Av. Los Ceibos esq. Av. Víctor Paz Estenssoro',
+    lat: -21.5420,
+    lng: -64.7460,
+    contactPerson: 'Lic. Claudia Zenteno (Oficial de Operaciones)',
+    contactPhone: '+591 76192837',
+    contactEmail: 'czenteno@bancounion.com.bo',
+    status: 'alerta',
+    lastReplenished: '28/08/2026',
+    printers: [
+      { model: 'HP LaserJet Enterprise M507dn', location: 'Cajas Ventanilla', serial: 'HP-M507-15' }
+    ],
+    toners: [
+      {
+        id: 'TON-89A-3',
+        model: 'HP 89A (CF289A)',
+        color: 'Negro',
+        yieldPages: '5,000 págs',
+        currentStock: 1,
+        minStock: 2,
+        compatiblePrinter: 'HP LaserJet M507dn'
+      }
+    ],
+    deliveryHistory: []
+  },
+  {
+    id: 'AG-FIE-01',
+    clientId: 'CLI-BANCO-FIE',
+    clientName: 'Banco FIE S.A.',
+    clientCode: 'FIE',
+    agencyName: 'Agencia Principal FIE Tarija',
+    city: 'Tarija',
+    address: 'Calle Daniel Campos N° 340 e/ C. Ingavi y Bolívar',
+    lat: -21.5358,
+    lng: -64.7315,
+    contactPerson: 'Lic. Marco Antonio Flores (Jefe de Agencia)',
+    contactPhone: '+591 73491022',
+    contactEmail: 'mflores@bancofie.com.bo',
+    status: 'optimo',
+    lastReplenished: '05/09/2026',
+    printers: [
+      { model: 'Kyocera ECOSYS P3260dn', location: 'Operaciones', serial: 'KYO-P3260-04' },
+      { model: 'HP LaserJet MFP M428fdw', location: 'Asesoría de Negocios', serial: 'HP-M428-09' }
+    ],
+    toners: [
+      {
+        id: 'TON-TK3192',
+        model: 'Kyocera TK-3192',
+        color: 'Negro',
+        yieldPages: '25,000 págs',
+        currentStock: 3,
+        minStock: 1,
+        compatiblePrinter: 'Kyocera ECOSYS P3260dn'
+      },
+      {
+        id: 'TON-58A-FIE',
+        model: 'HP 58A (CF258A)',
+        color: 'Negro',
+        yieldPages: '3,000 págs',
+        currentStock: 2,
+        minStock: 1,
+        compatiblePrinter: 'HP LaserJet MFP M428fdw'
+      }
+    ],
+    deliveryHistory: []
+  },
+  {
+    id: 'AG-FIE-02',
+    clientId: 'CLI-BANCO-FIE',
+    clientName: 'Banco FIE S.A.',
+    clientCode: 'FIE',
+    agencyName: 'Sucursal Yacuiba Centro',
+    city: 'Yacuiba',
+    address: 'Calle Comercio N° 580 esq. Campero, Yacuiba',
+    lat: -22.0152,
+    lng: -63.6778,
+    contactPerson: 'Sr. Daniel Farfán (Responsable TI)',
+    contactPhone: '+591 71833099',
+    contactEmail: 'dfarfan@bancofie.com.bo',
+    status: 'critico',
+    lastReplenished: '15/08/2026',
+    printers: [
+      { model: 'Kyocera ECOSYS P3260dn', location: 'Cajas & Atención', serial: 'KYO-P3260-19' }
+    ],
+    toners: [
+      {
+        id: 'TON-TK3192-2',
+        model: 'Kyocera TK-3192',
+        color: 'Negro',
+        yieldPages: '25,000 págs',
+        currentStock: 0,
+        minStock: 2,
+        compatiblePrinter: 'Kyocera ECOSYS P3260dn'
+      }
+    ],
+    deliveryHistory: []
+  },
+  {
+    id: 'AG-BNB-01',
+    clientId: 'CLI-BNB',
+    clientName: 'Banco Nacional de Bolivia (BNB)',
+    clientCode: 'BNB',
+    agencyName: 'Agencia Tarija Plaza Principal',
+    city: 'Tarija',
+    address: 'Calle 15 de Abril N° 260, Plaza Luis de Fuentes',
+    lat: -21.5348,
+    lng: -64.7328,
+    contactPerson: 'Lic. Gonzalo Barrenechea (Administrador)',
+    contactPhone: '+591 72901234',
+    contactEmail: 'gbarrenechea@bnb.com.bo',
+    status: 'optimo',
+    lastReplenished: '08/09/2026',
+    printers: [
+      { model: 'Lexmark MS823dn', location: 'Cajas de Alto Rendimiento', serial: 'LEX-MS823-01' },
+      { model: 'HP LaserJet Enterprise Flow M528', location: 'Banca Corporativa', serial: 'HP-M528-02' }
+    ],
+    toners: [
+      {
+        id: 'TON-58D0U00',
+        model: 'Lexmark 58D0U00 Ultra High',
+        color: 'Negro',
+        yieldPages: '55,000 págs',
+        currentStock: 2,
+        minStock: 1,
+        compatiblePrinter: 'Lexmark MS823dn'
+      },
+      {
+        id: 'TON-89X',
+        model: 'HP 89X Alta Capacidad',
+        color: 'Negro',
+        yieldPages: '10,000 págs',
+        currentStock: 3,
+        minStock: 2,
+        compatiblePrinter: 'HP LaserJet Enterprise Flow M528'
+      }
+    ],
+    deliveryHistory: []
+  },
+  {
+    id: 'AG-BNB-02',
+    clientId: 'CLI-BNB',
+    clientName: 'Banco Nacional de Bolivia (BNB)',
+    clientCode: 'BNB',
+    agencyName: 'Sucursal Bermejo Frontera',
+    city: 'Bermejo',
+    address: 'Av. Barrientos Ortuño N° 340, Bermejo',
+    lat: -22.7290,
+    lng: -64.3395,
+    contactPerson: 'Lic. Andrea Soliz (Supervisora)',
+    contactPhone: '+591 75129840',
+    contactEmail: 'asoliz@bnb.com.bo',
+    status: 'alerta',
+    lastReplenished: '20/08/2026',
+    printers: [
+      { model: 'HP LaserJet Enterprise Flow M528', location: 'Atención al Cliente', serial: 'HP-M528-11' }
+    ],
+    toners: [
+      {
+        id: 'TON-89X-2',
+        model: 'HP 89X Alta Capacidad',
+        color: 'Negro',
+        yieldPages: '10,000 págs',
+        currentStock: 1,
+        minStock: 2,
+        compatiblePrinter: 'HP LaserJet Enterprise Flow M528'
+      }
+    ],
+    deliveryHistory: []
+  }
+];
+
 export const AppProvider = ({ children }) => {
   const [page, setPage] = useState('dashboard');
   const [substates, setSubstates] = useState({
@@ -291,17 +584,20 @@ export const AppProvider = ({ children }) => {
   const [products, setProducts] = useState(initialMockProducts);
   const [tickets, setTickets] = useState(initialMockTickets);
   const [sales, setSales] = useState([]);
+  const [outsourcingAgencies, setOutsourcingAgencies] = useState(initialMockOutsourcingAgencies);
 
   // Custom Settings, Users and Audit states
   const [users, setUsers] = useState([
     { id: 'usr-1', email: 'admin@sistech.com', password: 'admin123', name: 'Alex Sterling', role: 'admin', status: 'active', avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80', date: '24/06/2026' },
     { id: 'usr-2', email: 'cajero@sistech.com', password: 'cajero123', name: 'Hamilton Cortez', role: 'cajero', status: 'active', avatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=80&q=80', date: '24/06/2026' },
-    { id: 'usr-3', email: 'tecnico@sistech.com', password: 'tecnico123', name: 'Ing. Milton Berthy Choque Canaviri', role: 'tecnico', status: 'active', avatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=80&q=80', date: '24/06/2026' }
+    { id: 'usr-3', email: 'tecnico@sistech.com', password: 'tecnico123', name: 'Ing. Milton Berthy Choque Canaviri', role: 'tecnico', status: 'active', avatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=80&q=80', date: '24/06/2026' },
+    { id: 'usr-4', email: 'banco.union@outsourcing.com', password: 'banco123', name: 'Supervisión Banco Unión', role: 'cliente_outsourcing', clientId: 'CLI-BANCO-UNION', status: 'active', avatar: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=80&q=80', date: '14/09/2026' }
   ]);
   const [rolePermissions, setRolePermissions] = useState({
-    admin: ['dashboard', 'service_registry', 'pos', 'inventory', 'reports', 'settings'],
+    admin: ['dashboard', 'outsourcing', 'service_registry', 'pos', 'inventory', 'reports', 'settings'],
     cajero: ['dashboard', 'pos'],
-    tecnico: ['dashboard', 'service_registry']
+    tecnico: ['dashboard', 'service_registry'],
+    cliente_outsourcing: ['outsourcing']
   });
   const [shopInfo, setShopInfo] = useState({
     name: 'SERVICIO TÉCNICO ESPECIALIZADO',
@@ -610,6 +906,8 @@ export const AppProvider = ({ children }) => {
               setRolePermissions(row.data);
             } else if (row.id === 'shopInfo' && row.data) {
               setShopInfo(row.data);
+            } else if (row.id === 'outsourcingAgencies' && Array.isArray(row.data) && row.data.length > 0) {
+              setOutsourcingAgencies(row.data);
             }
           });
         }
@@ -953,6 +1251,89 @@ export const AppProvider = ({ children }) => {
     logActivity('Actualizar Ticket', `Se actualizó el ticket ${ticketId} a estado ${newStatus}.`);
   };
 
+  // Outsourcing Agency Methods
+  const addAgencyTonerStock = async (agencyId, tonerId, quantity, technician, notes) => {
+    setOutsourcingAgencies(prev => prev.map(agency => {
+      if (agency.id !== agencyId) return agency;
+
+      const qtyToAdd = parseInt(quantity, 10) || 0;
+      let matchedToner = null;
+
+      const updatedToners = agency.toners.map(t => {
+        if (t.id === tonerId) {
+          matchedToner = t;
+          return { ...t, currentStock: t.currentStock + qtyToAdd };
+        }
+        return t;
+      });
+
+      // Recalculate status based on new stock levels
+      const totalBackup = updatedToners.reduce((s, t) => s + t.currentStock, 0);
+      const hasZero = updatedToners.some(t => t.currentStock === 0);
+      const hasLow = updatedToners.some(t => t.currentStock <= t.minStock);
+      
+      let newStatus = 'optimo';
+      if (totalBackup === 0 || hasZero) newStatus = 'critico';
+      else if (totalBackup <= 2 || hasLow) newStatus = 'alerta';
+
+      const deliveryEntry = {
+        id: `REM-2026-${Math.floor(100 + Math.random() * 900)}`,
+        date: new Date().toLocaleDateString('es-ES'),
+        technician: technician || 'Ing. Milton Berthy Choque Canaviri',
+        tonersDelivered: [
+          {
+            model: matchedToner?.model || tonerId,
+            color: matchedToner?.color || 'Negro',
+            compatiblePrinter: matchedToner?.compatiblePrinter || '',
+            quantity: qtyToAdd
+          }
+        ],
+        receiver: agency.contactPerson,
+        notes: notes || 'Entrega y reposición de stock de contingencia.'
+      };
+
+      const updatedAgency = {
+        ...agency,
+        toners: updatedToners,
+        status: newStatus,
+        lastReplenished: new Date().toLocaleDateString('es-ES'),
+        deliveryHistory: [deliveryEntry, ...(agency.deliveryHistory || [])]
+      };
+
+      if (isSupabaseConfigured && supabase) {
+        supabase.from('outsourcing_agencies').upsert(updatedAgency).catch(console.warn);
+      }
+
+      logActivity(
+        'Entrega de Tóners', 
+        `Se entregaron ${qtyToAdd} un. de tóner ${matchedToner?.model || ''} en ${agency.agencyName} (${agency.clientName}).`
+      );
+
+      return updatedAgency;
+    }));
+  };
+
+  const requestAgencyRestock = async (agencyId, notes) => {
+    const agency = outsourcingAgencies.find(a => a.id === agencyId);
+    if (!agency) return;
+    logActivity('Solicitud de Reposición', `La agencia ${agency.agencyName} (${agency.clientName}) solicitó reposición urgente de tóners.`);
+  };
+
+  const addOutsourcingAgency = async (agencyData) => {
+    if (isSupabaseConfigured && supabase) {
+      supabase.from('outsourcing_agencies').insert(agencyData).catch(console.warn);
+    }
+    setOutsourcingAgencies(prev => [agencyData, ...prev]);
+    logActivity('Nueva Agencia', `Se registró la sucursal ${agencyData.agencyName} para ${agencyData.clientName}.`);
+  };
+
+  const updateAgency = async (agencyId, fields) => {
+    if (isSupabaseConfigured && supabase) {
+      supabase.from('outsourcing_agencies').update(fields).eq('id', agencyId).catch(console.warn);
+    }
+    setOutsourcingAgencies(prev => prev.map(a => a.id === agencyId ? { ...a, ...fields } : a));
+  };
+
   return (
     <AppContext.Provider value={{
       page,
@@ -999,7 +1380,13 @@ export const AppProvider = ({ children }) => {
       clockOutUser,
       performCierreZ,
       returnSale,
-      addServicePaymentToCart
+      addServicePaymentToCart,
+      outsourcingAgencies,
+      setOutsourcingAgencies,
+      addAgencyTonerStock,
+      requestAgencyRestock,
+      addOutsourcingAgency,
+      updateAgency
     }}>
       {children}
     </AppContext.Provider>

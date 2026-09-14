@@ -9,6 +9,7 @@ import Inventory from './pages/Inventory';
 import ServiceRegistry from './pages/ServiceRegistry';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
+import OutsourcingManagement from './pages/OutsourcingManagement';
 
 function AppContent() {
   const { page, setPage, setSubstate, currentUser, rolePermissions } = useApp();
@@ -31,6 +32,8 @@ function AppContent() {
     switch (page) {
       case 'dashboard':
         return <Dashboard />;
+      case 'outsourcing':
+        return <OutsourcingManagement />;
       case 'pos':
         return <POS />;
       case 'inventory':

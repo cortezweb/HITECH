@@ -31,8 +31,9 @@ export default function Login() {
 
   const demoAccounts = [
     { label: 'Administrador', email: 'admin@sistech.com', pass: 'admin123', icon: 'admin_panel_settings', color: 'from-blue-500 to-indigo-600' },
-    { label: 'Cajero', email: 'cajero@sistech.com', pass: 'cajero123', icon: 'point_of_sale', color: 'from-emerald-500 to-teal-600' },
-    { label: 'Técnico', email: 'tecnico@sistech.com', pass: 'tecnico123', icon: 'build', color: 'from-amber-500 to-orange-600' }
+    { label: 'Banco Unión', email: 'banco.union@outsourcing.com', pass: 'banco123', icon: 'account_balance', color: 'from-cyan-600 to-blue-700' },
+    { label: 'Técnico', email: 'tecnico@sistech.com', pass: 'tecnico123', icon: 'build', color: 'from-amber-500 to-orange-600' },
+    { label: 'Cajero', email: 'cajero@sistech.com', pass: 'cajero123', icon: 'point_of_sale', color: 'from-emerald-500 to-teal-600' }
   ];
 
   return (
@@ -133,7 +134,7 @@ export default function Login() {
             <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider text-center mb-4">
               Cuentas de Demostración
             </p>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
               {demoAccounts.map((acc) => (
                 <button
                   key={acc.label}
