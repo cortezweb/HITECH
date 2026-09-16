@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import OutsourcingMap from '../components/OutsourcingMap';
 import OutsourcingDeliveryReceipt from '../components/OutsourcingDeliveryReceipt';
+import AgencyLocationPickerMap from '../components/AgencyLocationPickerMap';
 
 export default function OutsourcingManagement() {
   const { 
@@ -1471,27 +1472,42 @@ export default function OutsourcingManagement() {
                 </div>
               </div>
 
+              {/* Interactive Location Picker Map */}
+              <AgencyLocationPickerMap
+                lat={parseFloat(newAgencyForm.lat) || -21.5332}
+                lng={parseFloat(newAgencyForm.lng) || -64.7339}
+                agencyName={newAgencyForm.agencyName}
+                city={newAgencyForm.city}
+                onChange={(newLat, newLng) => {
+                  setNewAgencyForm(prev => ({
+                    ...prev,
+                    lat: newLat,
+                    lng: newLng
+                  }));
+                }}
+              />
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-slate-500 mb-1.5">Latitud (GPS) *</label>
                   <input
                     type="number"
-                    step="0.0001"
+                    step="0.000001"
                     required
                     value={newAgencyForm.lat}
-                    onChange={(e) => setNewAgencyForm({ ...newAgencyForm, lat: e.target.value })}
-                    className="w-full px-3 py-2.5 bg-surface-container-low border border-outline-variant/30 rounded-xl text-xs font-mono text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
+                    onChange={(e) => setNewAgencyForm({ ...newAgencyForm, lat: parseFloat(e.target.value) || e.target.value })}
+                    className="w-full px-3 py-2 bg-surface-container-low border border-outline-variant/30 rounded-xl text-xs font-mono text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
                   />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-500 mb-1.5">Longitud (GPS) *</label>
                   <input
                     type="number"
-                    step="0.0001"
+                    step="0.000001"
                     required
                     value={newAgencyForm.lng}
-                    onChange={(e) => setNewAgencyForm({ ...newAgencyForm, lng: e.target.value })}
-                    className="w-full px-3 py-2.5 bg-surface-container-low border border-outline-variant/30 rounded-xl text-xs font-mono text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
+                    onChange={(e) => setNewAgencyForm({ ...newAgencyForm, lng: parseFloat(e.target.value) || e.target.value })}
+                    className="w-full px-3 py-2 bg-surface-container-low border border-outline-variant/30 rounded-xl text-xs font-mono text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
                   />
                 </div>
               </div>
@@ -2128,15 +2144,30 @@ export default function OutsourcingManagement() {
                 </div>
               </div>
 
+              {/* Interactive Location Picker Map */}
+              <AgencyLocationPickerMap
+                lat={parseFloat(editAgencyForm.lat) || -21.5332}
+                lng={parseFloat(editAgencyForm.lng) || -64.7339}
+                agencyName={editAgencyForm.agencyName}
+                city={editAgencyForm.city}
+                onChange={(newLat, newLng) => {
+                  setEditAgencyForm(prev => ({
+                    ...prev,
+                    lat: newLat,
+                    lng: newLng
+                  }));
+                }}
+              />
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-slate-500 mb-1.5">Latitud GPS</label>
                   <input
                     type="number"
-                    step="0.0001"
+                    step="0.000001"
                     value={editAgencyForm.lat}
-                    onChange={(e) => setEditAgencyForm({ ...editAgencyForm, lat: e.target.value })}
-                    className="w-full px-3 py-2.5 bg-surface-container-low border border-outline-variant/30 rounded-xl text-xs font-mono text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
+                    onChange={(e) => setEditAgencyForm({ ...editAgencyForm, lat: parseFloat(e.target.value) || e.target.value })}
+                    className="w-full px-3 py-2 bg-surface-container-low border border-outline-variant/30 rounded-xl text-xs font-mono text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
                   />
                 </div>
 
@@ -2144,10 +2175,10 @@ export default function OutsourcingManagement() {
                   <label className="block text-xs font-bold text-slate-500 mb-1.5">Longitud GPS</label>
                   <input
                     type="number"
-                    step="0.0001"
+                    step="0.000001"
                     value={editAgencyForm.lng}
-                    onChange={(e) => setEditAgencyForm({ ...editAgencyForm, lng: e.target.value })}
-                    className="w-full px-3 py-2.5 bg-surface-container-low border border-outline-variant/30 rounded-xl text-xs font-mono text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
+                    onChange={(e) => setEditAgencyForm({ ...editAgencyForm, lng: parseFloat(e.target.value) || e.target.value })}
+                    className="w-full px-3 py-2 bg-surface-container-low border border-outline-variant/30 rounded-xl text-xs font-mono text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
                   />
                 </div>
               </div>
