@@ -132,3 +132,70 @@ export const mapCierreToDb = (c) => ({
   fecha: c.fecha,
   timestamp: c.timestamp
 });
+
+export const mapAgencyFromDb = (a) => ({
+  ...a,
+  clientId: a.clientid || a.clientId,
+  clientName: a.clientname || a.clientName,
+  clientCode: a.clientcode || a.clientCode,
+  agencyName: a.agencyname || a.agencyName,
+  city: a.city,
+  address: a.address,
+  lat: a.lat !== undefined ? Number(a.lat) : -21.5332,
+  lng: a.lng !== undefined ? Number(a.lng) : -64.7339,
+  contactPerson: a.contactperson || a.contactPerson || '',
+  contactPhone: a.contactphone || a.contactPhone || '',
+  contactEmail: a.contactemail || a.contactEmail || '',
+  status: a.status || 'optimo',
+  lastReplenished: a.lastreplenished || a.lastReplenished || '',
+  printers: a.printers || [],
+  toners: a.toners || [],
+  deliveryHistory: a.deliveryhistory || a.deliveryHistory || []
+});
+
+export const mapAgencyToDb = (a) => ({
+  id: a.id,
+  clientid: a.clientId || a.clientid,
+  clientname: a.clientName || a.clientname,
+  clientcode: a.clientCode || a.clientcode,
+  agencyname: a.agencyName || a.agencyname,
+  city: a.city,
+  address: a.address,
+  lat: a.lat !== undefined ? Number(a.lat) : -21.5332,
+  lng: a.lng !== undefined ? Number(a.lng) : -64.7339,
+  contactperson: a.contactPerson || a.contactperson || '',
+  contactphone: a.contactPhone || a.contactphone || '',
+  contactemail: a.contactEmail || a.contactemail || '',
+  status: a.status || 'optimo',
+  lastreplenished: a.lastReplenished || a.lastreplenished || '',
+  printers: a.printers || [],
+  toners: a.toners || [],
+  deliveryhistory: a.deliveryHistory || a.deliveryhistory || []
+});
+
+export const mapClientFromDb = (c) => ({
+  ...c,
+  id: c.id,
+  name: c.name,
+  code: c.code,
+  contactPerson: c.contactperson || c.contactPerson || '',
+  contactPhone: c.contactphone || c.contactPhone || '',
+  contactEmail: c.contactemail || c.contactEmail || '',
+  contractSla: c.contractsla || c.contractSla || 'SLA Estándar 24/7',
+  city: c.city || 'Tarija',
+  address: c.address || '',
+  notes: c.notes || ''
+});
+
+export const mapClientToDb = (c) => ({
+  id: c.id,
+  name: c.name,
+  code: c.code,
+  contactperson: c.contactPerson || c.contactperson || '',
+  contactphone: c.contactPhone || c.contactphone || '',
+  contactemail: c.contactEmail || c.contactemail || '',
+  contractsla: c.contractSla || c.contractsla || 'SLA Estándar 24/7',
+  city: c.city || 'Tarija',
+  address: c.address || '',
+  notes: c.notes || ''
+});

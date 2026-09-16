@@ -11,7 +11,11 @@ import {
   mapAttendanceFromDb,
   mapAttendanceToDb,
   mapCierreFromDb,
-  mapCierreToDb
+  mapCierreToDb,
+  mapAgencyFromDb,
+  mapAgencyToDb,
+  mapClientFromDb,
+  mapClientToDb
 } from '../config/supabase';
 
 const AppContext = createContext();
@@ -968,7 +972,9 @@ export const AppProvider = ({ children }) => {
           { data: cfg },
           { data: logs },
           { data: att },
-          { data: closings }
+          { data: closings },
+          { data: agencies },
+          { data: clients }
         ] = await Promise.all([
           supabase.from('products').select('*'),
           supabase.from('tickets').select('*'),
@@ -977,7 +983,9 @@ export const AppProvider = ({ children }) => {
           supabase.from('config').select('*'),
           supabase.from('activity_logs').select('*').order('timestamp', { ascending: false }).limit(100),
           supabase.from('attendance').select('*').order('timestamp', { ascending: false }).limit(100),
-          supabase.from('cierres_caja').select('*').order('timestamp', { ascending: false }).limit(20)
+          supabase.from('cierres_caja').select('*').order('timestamp', { ascending: false }).limit(20),
+          supabase.from('outsourcing_agencies').select('*'),
+          supabase.from('outsourcing_clients').select('*')
         ]);
 
         if (prods && prods.length > 0) {
@@ -1000,14 +1008,24 @@ export const AppProvider = ({ children }) => {
         if (att && att.length > 0) setAttendanceLogs(att.map(mapAttendanceFromDb));
         if (closings && closings.length > 0) setLastClosingTimestamp(closings[0].timestamp);
 
+        if (agencies && agencies.length > 0) {
+          setOutsourcingAgencies(agencies.map(mapAgencyFromDb));
+        } else {
+          initialMockOutsourcingAgencies.forEach(a => supabase.from('outsourcing_agencies').upsert(mapAgencyToDb(a)).catch(console.warn));
+        }
+
+        if (clients && clients.length > 0) {
+          setOutsourcingClients(clients.map(mapClientFromDb));
+        } else {
+          initialMockOutsourcingClients.forEach(c => supabase.from('outsourcing_clients').upsert(mapClientToDb(c)).catch(console.warn));
+        }
+
         if (cfg) {
           cfg.forEach(row => {
             if (row.id === 'rolePermissions' && row.data) {
               setRolePermissions(row.data);
             } else if (row.id === 'shopInfo' && row.data) {
               setShopInfo(row.data);
-            } else if (row.id === 'outsourcingAgencies' && Array.isArray(row.data) && row.data.length > 0) {
-              setOutsourcingAgencies(row.data);
             }
           });
         }
@@ -1058,6 +1076,28 @@ export const AppProvider = ({ children }) => {
           setUsers(prev => prev.map(u => u.id === payload.new.id ? payload.new : u));
         } else if (payload.eventType === 'DELETE') {
           setUsers(prev => prev.filter(u => u.id !== payload.old.id));
+        }
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'outsourcing_agencies' }, (payload) => {
+        if (payload.eventType === 'INSERT') {
+          const item = mapAgencyFromDb(payload.new);
+          setOutsourcingAgencies(prev => [item, ...prev.filter(a => a.id !== item.id)]);
+        } else if (payload.eventType === 'UPDATE') {
+          const item = mapAgencyFromDb(payload.new);
+          setOutsourcingAgencies(prev => prev.map(a => a.id === item.id ? item : a));
+        } else if (payload.eventType === 'DELETE') {
+          setOutsourcingAgencies(prev => prev.filter(a => a.id !== payload.old.id));
+        }
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'outsourcing_clients' }, (payload) => {
+        if (payload.eventType === 'INSERT') {
+          const item = mapClientFromDb(payload.new);
+          setOutsourcingClients(prev => [item, ...prev.filter(c => c.id !== item.id)]);
+        } else if (payload.eventType === 'UPDATE') {
+          const item = mapClientFromDb(payload.new);
+          setOutsourcingClients(prev => prev.map(c => c.id === item.id ? item : c));
+        } else if (payload.eventType === 'DELETE') {
+          setOutsourcingClients(prev => prev.filter(c => c.id !== payload.old.id));
         }
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'config' }, (payload) => {
@@ -1459,7 +1499,7 @@ export const AppProvider = ({ children }) => {
 
   const addOutsourcingAgency = async (agencyData) => {
     if (isSupabaseConfigured && supabase) {
-      supabase.from('outsourcing_agencies').insert(agencyData).catch(console.warn);
+      supabase.from('outsourcing_agencies').insert(mapAgencyToDb(agencyData)).catch(console.warn);
     }
     setOutsourcingAgencies(prev => [agencyData, ...prev]);
     logActivity('Nueva Agencia', `Se registró la sucursal ${agencyData.agencyName} para ${agencyData.clientName}.`);
@@ -1475,7 +1515,7 @@ export const AppProvider = ({ children }) => {
       return a;
     }));
     if (isSupabaseConfigured && supabase && updatedAgencyObj) {
-      supabase.from('outsourcing_agencies').update(fields).eq('id', agencyId).catch(console.warn);
+      supabase.from('outsourcing_agencies').update(mapAgencyToDb(updatedAgencyObj)).eq('id', agencyId).catch(console.warn);
     }
     logActivity('Modificar Sucursal', `Se modificaron los datos de la sucursal ${fields.agencyName || agencyId}.`);
     return updatedAgencyObj;
@@ -1508,6 +1548,9 @@ export const AppProvider = ({ children }) => {
       created_at: new Date().toISOString()
     };
 
+    if (isSupabaseConfigured && supabase) {
+      supabase.from('outsourcing_clients').insert(mapClientToDb(newClient)).catch(console.warn);
+    }
     setOutsourcingClients(prev => [...prev, newClient]);
     logActivity('Crear Cliente Outsourcing', `Se registró el cliente corporativo ${newClient.name} (${newClient.code}).`);
     return newClient;
@@ -1518,13 +1561,25 @@ export const AppProvider = ({ children }) => {
     const updatedFields = { ...fields };
     if (clientCode) updatedFields.code = clientCode;
 
+    let targetClient = null;
     setOutsourcingClients(prev => {
       const exists = prev.some(c => c.id === clientId);
       if (exists) {
-        return prev.map(c => c.id === clientId ? { ...c, ...updatedFields } : c);
+        return prev.map(c => {
+          if (c.id === clientId) {
+            targetClient = { ...c, ...updatedFields };
+            return targetClient;
+          }
+          return c;
+        });
       }
-      return [...prev, { id: clientId, ...updatedFields }];
+      targetClient = { id: clientId, ...updatedFields };
+      return [...prev, targetClient];
     });
+
+    if (isSupabaseConfigured && supabase && targetClient) {
+      supabase.from('outsourcing_clients').upsert(mapClientToDb(targetClient)).catch(console.warn);
+    }
 
     // Cascade update to all agencies belonging to this client!
     setOutsourcingAgencies(prev => prev.map(agency => {
@@ -1535,10 +1590,7 @@ export const AppProvider = ({ children }) => {
           clientCode: clientCode || agency.clientCode
         };
         if (isSupabaseConfigured && supabase) {
-          supabase.from('outsourcing_agencies').update({
-            clientName: updated.clientName,
-            clientCode: updated.clientCode
-          }).eq('id', agency.id).catch(console.warn);
+          supabase.from('outsourcing_agencies').update(mapAgencyToDb(updated)).eq('id', agency.id).catch(console.warn);
         }
         return updated;
       }
@@ -1559,6 +1611,9 @@ export const AppProvider = ({ children }) => {
       if (isSupabaseConfigured && supabase) {
         supabase.from('outsourcing_agencies').delete().eq('clientId', clientId).catch(console.warn);
       }
+    }
+    if (isSupabaseConfigured && supabase) {
+      supabase.from('outsourcing_clients').delete().eq('id', clientId).catch(console.warn);
     }
     setOutsourcingClients(prev => prev.filter(c => c.id !== clientId));
     logActivity('Eliminar Cliente Outsourcing', `Se eliminó el cliente corporativo ${target ? target.name : clientId}.`);

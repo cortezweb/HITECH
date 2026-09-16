@@ -140,6 +140,22 @@ CREATE TABLE IF NOT EXISTS outsourcing_agencies (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- 10. OUTSOURCING_CLIENTS (Empresas y Contratos Corporativos)
+CREATE TABLE IF NOT EXISTS outsourcing_clients (
+    id VARCHAR(50) PRIMARY KEY,
+    name TEXT NOT NULL,
+    code TEXT NOT NULL,
+    contactPerson TEXT,
+    contactPhone TEXT,
+    contactEmail TEXT,
+    contractSla TEXT,
+    city TEXT,
+    address TEXT,
+    notes TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- Habilitar Row Level Security (RLS)
 ALTER TABLE products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tickets ENABLE ROW LEVEL SECURITY;
@@ -150,6 +166,7 @@ ALTER TABLE attendance ENABLE ROW LEVEL SECURITY;
 ALTER TABLE cierres_caja ENABLE ROW LEVEL SECURITY;
 ALTER TABLE activity_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE outsourcing_agencies ENABLE ROW LEVEL SECURITY;
+ALTER TABLE outsourcing_clients ENABLE ROW LEVEL SECURITY;
 
 -- Políticas de acceso para clave pública anónima (anon key)
 CREATE POLICY "Public full access products" ON products FOR ALL USING (true) WITH CHECK (true);
@@ -161,6 +178,7 @@ CREATE POLICY "Public full access attendance" ON attendance FOR ALL USING (true)
 CREATE POLICY "Public full access cierres_caja" ON cierres_caja FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Public full access activity_logs" ON activity_logs FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Public full access outsourcing_agencies" ON outsourcing_agencies FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Public full access outsourcing_clients" ON outsourcing_clients FOR ALL USING (true) WITH CHECK (true);
 
 -- Habilitar Realtime para suscripciones en vivo
 ALTER PUBLICATION supabase_realtime ADD TABLE products;
@@ -172,6 +190,7 @@ ALTER PUBLICATION supabase_realtime ADD TABLE attendance;
 ALTER PUBLICATION supabase_realtime ADD TABLE cierres_caja;
 ALTER PUBLICATION supabase_realtime ADD TABLE activity_logs;
 ALTER PUBLICATION supabase_realtime ADD TABLE outsourcing_agencies;
+ALTER PUBLICATION supabase_realtime ADD TABLE outsourcing_clients;
 
 -- Datos Semilla Iniciales: Usuarios
 INSERT INTO users (id, email, password, name, role, status, avatar, date)
