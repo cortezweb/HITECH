@@ -6,9 +6,15 @@ import OutsourcingDeliveryReceipt from '../components/OutsourcingDeliveryReceipt
 export default function OutsourcingManagement() {
   const { 
     outsourcingAgencies = [], 
+    outsourcingClients = [],
+    addOutsourcingClient,
+    updateOutsourcingClient,
+    deleteOutsourcingClient,
     addAgencyTonerStock, 
     requestAgencyRestock, 
     addOutsourcingAgency,
+    updateAgency,
+    deleteAgency,
     consumeAgencyToner,
     shopInfo,
     currentUser 
@@ -27,20 +33,56 @@ export default function OutsourcingManagement() {
   const [currentReceiptData, setCurrentReceiptData] = useState(null);
   const [activeTab, setActiveTab] = useState('split'); // 'split', 'map', 'list'
 
+  // Client Management Modals & State
+  const [isClientsModalOpen, setIsClientsModalOpen] = useState(false);
+  const [clientModalTab, setClientModalTab] = useState('list'); // 'list' | 'create'
+  const [isEditClientModalOpen, setIsEditClientModalOpen] = useState(false);
+  const [editClientForm, setEditClientForm] = useState({
+    id: '',
+    name: '',
+    code: '',
+    contactPerson: '',
+    contactPhone: '',
+    contactEmail: '',
+    contractSla: '',
+    city: '',
+    address: '',
+    notes: ''
+  });
+
+  const [newClientForm, setNewClientForm] = useState({
+    name: '',
+    code: '',
+    contactPerson: '',
+    contactPhone: '+591 ',
+    contactEmail: '',
+    contractSla: 'SLA Platino 24/7 (Reposición < 2 horas)',
+    city: 'Tarija',
+    address: '',
+    notes: ''
+  });
+
+  // Agency Editing State
+  const [isEditAgencyModalOpen, setIsEditAgencyModalOpen] = useState(false);
+  const [editAgencyForm, setEditAgencyForm] = useState(null);
+
   // If user is a corporate client (e.g. Banco Unión), auto-lock to their client
   const isCorporateClient = currentUser?.role === 'cliente_outsourcing';
   const effectiveClientId = isCorporateClient ? (currentUser.clientId || 'CLI-BANCO-UNION') : selectedClientId;
 
-  // Extract unique clients
+  // Extract merged unique clients (from explicit clients and existing agencies)
   const clientOptions = useMemo(() => {
     const map = new Map();
-    outsourcingAgencies.forEach(a => {
+    (outsourcingClients || []).forEach(c => {
+      map.set(c.id, { id: c.id, name: c.name, code: c.code, ...c });
+    });
+    (outsourcingAgencies || []).forEach(a => {
       if (!map.has(a.clientId)) {
         map.set(a.clientId, { id: a.clientId, name: a.clientName, code: a.clientCode });
       }
     });
     return Array.from(map.values());
-  }, [outsourcingAgencies]);
+  }, [outsourcingClients, outsourcingAgencies]);
 
   // Filtered agencies
   const filteredAgencies = useMemo(() => {
@@ -232,6 +274,99 @@ export default function OutsourcingManagement() {
     setSelectedAgencyId(newAgency.id);
   };
 
+  // Handle New Corporate Client Submission
+  const handleCreateClient = (e) => {
+    e.preventDefault();
+    if (!newClientForm.name.trim() || !newClientForm.code.trim()) {
+      alert('Por favor introduce el nombre y código del cliente corporativo.');
+      return;
+    }
+    addOutsourcingClient(newClientForm);
+    setNewClientForm({
+      name: '',
+      code: '',
+      contactPerson: '',
+      contactPhone: '+591 ',
+      contactEmail: '',
+      contractSla: 'SLA Platino 24/7 (Reposición < 2 horas)',
+      city: 'Tarija',
+      address: '',
+      notes: ''
+    });
+    setClientModalTab('list');
+  };
+
+  const handleOpenEditClient = (client) => {
+    setEditClientForm({
+      id: client.id,
+      name: client.name,
+      code: client.code,
+      contactPerson: client.contactPerson || '',
+      contactPhone: client.contactPhone || '',
+      contactEmail: client.contactEmail || '',
+      contractSla: client.contractSla || 'SLA Estándar 24/7',
+      city: client.city || 'Tarija',
+      address: client.address || '',
+      notes: client.notes || ''
+    });
+    setIsEditClientModalOpen(true);
+  };
+
+  const handleSaveEditClient = (e) => {
+    e.preventDefault();
+    if (!editClientForm.name.trim() || !editClientForm.code.trim()) return;
+    updateOutsourcingClient(editClientForm.id, editClientForm);
+    setIsEditClientModalOpen(false);
+  };
+
+  const handleDeleteClient = (client) => {
+    deleteOutsourcingClient(client.id);
+  };
+
+  // Agency Editing Handlers
+  const handleOpenEditAgency = (agency) => {
+    setEditAgencyForm({
+      id: agency.id,
+      clientId: agency.clientId,
+      clientName: agency.clientName,
+      clientCode: agency.clientCode,
+      agencyName: agency.agencyName,
+      city: agency.city,
+      address: agency.address,
+      lat: agency.lat,
+      lng: agency.lng,
+      contactPerson: agency.contactPerson || '',
+      contactPhone: agency.contactPhone || '',
+      contactEmail: agency.contactEmail || '',
+      printers: JSON.parse(JSON.stringify(agency.printers || [])),
+      toners: JSON.parse(JSON.stringify(agency.toners || []))
+    });
+    setIsEditAgencyModalOpen(true);
+  };
+
+  const handleSaveEditAgency = (e) => {
+    e.preventDefault();
+    if (!editAgencyForm || !editAgencyForm.agencyName || !editAgencyForm.address) return;
+    const client = clientOptions.find(c => c.id === editAgencyForm.clientId);
+    updateAgency(editAgencyForm.id, {
+      ...editAgencyForm,
+      clientName: client?.name || editAgencyForm.clientName,
+      clientCode: client?.code || editAgencyForm.clientCode,
+      lat: parseFloat(editAgencyForm.lat) || -21.5332,
+      lng: parseFloat(editAgencyForm.lng) || -64.7339
+    });
+    setIsEditAgencyModalOpen(false);
+  };
+
+  const handleDeleteAgency = (agency) => {
+    if (confirm(`¿Estás seguro de que deseas eliminar permanentemente la sucursal "${agency.agencyName}"? Esta acción no se puede deshacer.`)) {
+      deleteAgency(agency.id);
+      if (selectedAgencyId === agency.id) {
+        setSelectedAgencyId(null);
+      }
+    }
+  };
+
   // Direct WhatsApp Restock Alert
   const openWhatsAppRestock = (agency) => {
     const tonersText = (agency.toners || [])
@@ -275,6 +410,20 @@ export default function OutsourcingManagement() {
         </div>
 
         <div className="flex items-center gap-3 relative z-10">
+          {!isCorporateClient && (
+            <button
+              onClick={() => {
+                setClientModalTab('list');
+                setIsClientsModalOpen(true);
+              }}
+              className="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold flex items-center gap-2 border border-white/15 transition-all cursor-pointer shadow-sm"
+              title="Administrar empresas y clientes corporativos"
+            >
+              <span className="material-symbols-outlined text-[18px]">business</span>
+              <span>Clientes Corporativos ({outsourcingClients.length})</span>
+            </button>
+          )}
+
           {!isCorporateClient && (
             <button
               onClick={() => setIsNewAgencyModalOpen(true)}
@@ -385,23 +534,53 @@ export default function OutsourcingManagement() {
         {/* Client filter */}
         <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
           {!isCorporateClient && (
-            <div className="relative min-w-[200px]">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-slate-400 text-[18px]">
-                account_balance
-              </span>
-              <select
-                value={effectiveClientId}
-                onChange={(e) => setSelectedClientId(e.target.value)}
-                className="w-full pl-9 pr-8 py-2 bg-surface-container-low border border-outline-variant/30 rounded-xl text-xs font-bold text-on-surface focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer appearance-none"
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <div className="relative min-w-[200px]">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-slate-400 text-[18px]">
+                  account_balance
+                </span>
+                <select
+                  value={effectiveClientId}
+                  onChange={(e) => setSelectedClientId(e.target.value)}
+                  className="w-full pl-9 pr-8 py-2 bg-surface-container-low border border-outline-variant/30 rounded-xl text-xs font-bold text-on-surface focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer appearance-none"
+                >
+                  <option value="ALL">🏢 Todos los Clientes</option>
+                  {clientOptions.map(c => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-slate-400 pointer-events-none text-[18px]">
+                  arrow_drop_down
+                </span>
+              </div>
+
+              {effectiveClientId !== 'ALL' && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const clientToEdit = clientOptions.find(c => c.id === effectiveClientId);
+                    if (clientToEdit) handleOpenEditClient(clientToEdit);
+                  }}
+                  className="px-2.5 py-2 bg-surface-container hover:bg-surface-container-high text-primary border border-outline-variant/30 rounded-xl text-xs font-bold transition-all flex items-center gap-1 cursor-pointer shadow-sm"
+                  title="Modificar nombre y datos de este cliente"
+                >
+                  <span className="material-symbols-outlined text-[15px]">edit</span>
+                  <span className="hidden sm:inline">Modificar</span>
+                </button>
+              )}
+
+              <button
+                type="button"
+                onClick={() => {
+                  setClientModalTab('create');
+                  setIsClientsModalOpen(true);
+                }}
+                className="px-2.5 py-2 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 rounded-xl text-xs font-bold transition-all flex items-center gap-1 cursor-pointer shadow-sm"
+                title="Registrar nuevo cliente corporativo"
               >
-                <option value="ALL">🏢 Todos los Clientes</option>
-                {clientOptions.map(c => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-slate-400 pointer-events-none text-[18px]">
-                arrow_drop_down
-              </span>
+                <span className="material-symbols-outlined text-[15px]">add_business</span>
+                <span className="hidden sm:inline">+ Cliente</span>
+              </button>
             </div>
           )}
 
@@ -681,6 +860,28 @@ export default function OutsourcingManagement() {
                 <span className="material-symbols-outlined text-[18px]">swap_vert</span>
                 <span>- Instalar en Impresora</span>
               </button>
+
+              {!isCorporateClient && (
+                <button
+                  onClick={() => handleOpenEditAgency(selectedAgency)}
+                  className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold shadow-sm flex items-center gap-2 transition-all cursor-pointer"
+                  title="Modificar datos, dirección o flota de la sucursal"
+                >
+                  <span className="material-symbols-outlined text-[18px]">edit_location_alt</span>
+                  <span>Editar Sucursal</span>
+                </button>
+              )}
+
+              {!isCorporateClient && (
+                <button
+                  onClick={() => handleDeleteAgency(selectedAgency)}
+                  className="px-3 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-xl text-xs font-bold border border-rose-200 flex items-center gap-1.5 transition-all cursor-pointer"
+                  title="Eliminar esta sucursal"
+                >
+                  <span className="material-symbols-outlined text-[18px]">delete</span>
+                  <span>Eliminar</span>
+                </button>
+              )}
 
               <button
                 onClick={() => setSelectedAgencyId(null)}
@@ -1200,7 +1401,20 @@ export default function OutsourcingManagement() {
             <form onSubmit={handleCreateAgency} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 mb-1.5">Cliente / Banco *</label>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block text-xs font-bold text-slate-500">Cliente / Empresa *</label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsNewAgencyModalOpen(false);
+                        setClientModalTab('create');
+                        setIsClientsModalOpen(true);
+                      }}
+                      className="text-[11px] font-bold text-primary hover:underline cursor-pointer"
+                    >
+                      + Nuevo Cliente
+                    </button>
+                  </div>
                   <select
                     value={newAgencyForm.clientId}
                     onChange={(e) => {
@@ -1215,7 +1429,7 @@ export default function OutsourcingManagement() {
                     className="w-full px-3 py-2.5 bg-surface-container-low border border-outline-variant/30 rounded-xl text-xs font-bold text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
                   >
                     {clientOptions.map(c => (
-                      <option key={c.id} value={c.id}>{c.name}</option>
+                      <option key={c.id} value={c.id}>{c.name} ({c.code})</option>
                     ))}
                   </select>
                 </div>
@@ -1365,6 +1579,676 @@ export default function OutsourcingManagement() {
                 >
                   <span className="material-symbols-outlined text-[16px]">add_circle</span>
                   <span>Registrar Agencia</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Client Management Modal */}
+      {isClientsModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-surface-container-lowest rounded-3xl p-6 w-full max-w-3xl shadow-2xl border border-outline-variant/30 my-8">
+            <div className="flex items-center justify-between pb-4 mb-4 border-b border-outline-variant/20">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
+                  <span className="material-symbols-outlined text-[24px]">business</span>
+                </div>
+                <div>
+                  <h3 className="font-black text-lg text-on-surface">Gestión de Clientes Corporativos</h3>
+                  <p className="text-xs text-slate-400">Crea, modifica y gestiona empresas con contratos de Outsourcing y suministros</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setIsClientsModalOpen(false)}
+                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[22px]">close</span>
+              </button>
+            </div>
+
+            {/* Tab switch */}
+            <div className="flex items-center gap-2 mb-6 border-b border-outline-variant/20 pb-2">
+              <button
+                type="button"
+                onClick={() => setClientModalTab('list')}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+                  clientModalTab === 'list' 
+                    ? 'bg-primary text-white shadow-sm' 
+                    : 'text-slate-500 hover:bg-surface-container'
+                }`}
+              >
+                <span className="material-symbols-outlined text-[16px]">domain</span>
+                <span>Directorio de Clientes ({clientOptions.length})</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setClientModalTab('create')}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
+                  clientModalTab === 'create' 
+                    ? 'bg-primary text-white shadow-sm' 
+                    : 'text-slate-500 hover:bg-surface-container'
+                }`}
+              >
+                <span className="material-symbols-outlined text-[16px]">add_business</span>
+                <span>+ Registrar Nuevo Cliente</span>
+              </button>
+            </div>
+
+            {/* Tab: LIST CLIENTS */}
+            {clientModalTab === 'list' && (
+              <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
+                {clientOptions.length === 0 ? (
+                  <div className="text-center py-12 text-slate-400">
+                    <span className="material-symbols-outlined text-4xl mb-2">business_center</span>
+                    <p className="text-sm font-semibold">No hay clientes corporativos registrados aún.</p>
+                  </div>
+                ) : (
+                  clientOptions.map((client) => {
+                    const clientAgencies = outsourcingAgencies.filter(a => a.clientId === client.id);
+                    const totalBackupToners = clientAgencies.reduce((acc, a) => {
+                      return acc + (a.toners?.reduce((s, t) => s + (t.currentStock || 0), 0) || 0);
+                    }, 0);
+
+                    return (
+                      <div 
+                        key={client.id}
+                        className="bg-surface-container-low rounded-2xl p-4 border border-outline-variant/20 hover:border-primary/40 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4"
+                      >
+                        <div className="space-y-1.5 flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-primary-fixed text-on-primary-fixed">
+                              {client.code}
+                            </span>
+                            <h4 className="font-black text-sm text-on-surface">
+                              {client.name}
+                            </h4>
+                            {client.contractSla && (
+                              <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                                {client.contractSla}
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-xs text-slate-500 pt-1">
+                            <p className="flex items-center gap-1.5">
+                              <span className="material-symbols-outlined text-[15px] text-slate-400">person</span>
+                              <span>{client.contactPerson || 'Sin contacto asignado'}</span>
+                            </p>
+                            <p className="flex items-center gap-1.5">
+                              <span className="material-symbols-outlined text-[15px] text-slate-400">call</span>
+                              <span>{client.contactPhone || 'Sin teléfono'}</span>
+                            </p>
+                            {client.contactEmail && (
+                              <p className="flex items-center gap-1.5">
+                                <span className="material-symbols-outlined text-[15px] text-slate-400">mail</span>
+                                <span>{client.contactEmail}</span>
+                              </p>
+                            )}
+                            {client.address && (
+                              <p className="flex items-center gap-1.5">
+                                <span className="material-symbols-outlined text-[15px] text-slate-400">location_on</span>
+                                <span className="truncate">{client.city ? `${client.city} • ` : ''}{client.address}</span>
+                              </p>
+                            )}
+                          </div>
+
+                          <div className="flex items-center gap-3 text-[11px] font-bold text-slate-400 pt-1">
+                            <span className="flex items-center gap-1 text-primary">
+                              <span className="material-symbols-outlined text-[14px]">storefront</span>
+                              {clientAgencies.length} {clientAgencies.length === 1 ? 'sucursal' : 'sucursales'}
+                            </span>
+                            <span>•</span>
+                            <span className="text-slate-600">
+                              {totalBackupToners} tóners en reserva
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 border-t md:border-t-0 pt-3 md:pt-0 border-outline-variant/15 flex-shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedClientId(client.id);
+                              setIsClientsModalOpen(false);
+                            }}
+                            className="px-3 py-1.5 bg-surface-container hover:bg-surface-container-high text-slate-700 rounded-xl text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
+                            title="Ver solo las sucursales de este cliente"
+                          >
+                            <span className="material-symbols-outlined text-[15px]">filter_alt</span>
+                            <span>Ver Sucursales</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleOpenEditClient(client)}
+                            className="px-3 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary rounded-xl text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
+                            title="Modificar datos de este cliente"
+                          >
+                            <span className="material-symbols-outlined text-[15px]">edit</span>
+                            <span>Modificar</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteClient(client)}
+                            className="p-1.5 text-rose-500 hover:bg-rose-50 rounded-xl transition-all cursor-pointer"
+                            title="Eliminar cliente"
+                          >
+                            <span className="material-symbols-outlined text-[18px]">delete</span>
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            )}
+
+            {/* Tab: CREATE CLIENT */}
+            {clientModalTab === 'create' && (
+              <form onSubmit={handleCreateClient} className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-bold text-slate-500 mb-1.5">Razón Social / Nombre de la Empresa *</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="ej. Banco Mercantil Santa Cruz S.A."
+                      value={newClientForm.name}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        // Auto-generate code acronym if empty
+                        const autoCode = val.split(' ').map(w => w[0]).join('').slice(0, 4).toUpperCase();
+                        setNewClientForm(prev => ({
+                          ...prev,
+                          name: val,
+                          code: prev.code ? prev.code : autoCode
+                        }));
+                      }}
+                      className="w-full px-3 py-2.5 bg-surface-container-low border border-outline-variant/30 rounded-xl text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 mb-1.5">Código Único (3-4 letras) *</label>
+                    <input
+                      type="text"
+                      required
+                      maxLength={6}
+                      placeholder="ej. BMSC"
+                      value={newClientForm.code}
+                      onChange={(e) => setNewClientForm({ ...newClientForm, code: e.target.value.toUpperCase() })}
+                      className="w-full px-3 py-2.5 bg-surface-container-low border border-outline-variant/30 rounded-xl text-xs font-mono font-bold uppercase text-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 mb-1.5">Persona de Contacto Principal</label>
+                    <input
+                      type="text"
+                      placeholder="ej. Lic. Roberto Carlos Mendoza"
+                      value={newClientForm.contactPerson}
+                      onChange={(e) => setNewClientForm({ ...newClientForm, contactPerson: e.target.value })}
+                      className="w-full px-3 py-2.5 bg-surface-container-low border border-outline-variant/30 rounded-xl text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 mb-1.5">Teléfono / WhatsApp de Contacto</label>
+                    <input
+                      type="text"
+                      placeholder="+591 71234567"
+                      value={newClientForm.contactPhone}
+                      onChange={(e) => setNewClientForm({ ...newClientForm, contactPhone: e.target.value })}
+                      className="w-full px-3 py-2.5 bg-surface-container-low border border-outline-variant/30 rounded-xl text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 mb-1.5">Correo Electrónico Corporativo</label>
+                    <input
+                      type="email"
+                      placeholder="operaciones@empresa.com"
+                      value={newClientForm.contactEmail}
+                      onChange={(e) => setNewClientForm({ ...newClientForm, contactEmail: e.target.value })}
+                      className="w-full px-3 py-2.5 bg-surface-container-low border border-outline-variant/30 rounded-xl text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 mb-1.5">Nivel de Contrato SLA</label>
+                    <select
+                      value={newClientForm.contractSla}
+                      onChange={(e) => setNewClientForm({ ...newClientForm, contractSla: e.target.value })}
+                      className="w-full px-3 py-2.5 bg-surface-container-low border border-outline-variant/30 rounded-xl text-xs font-bold text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
+                    >
+                      <option value="SLA Platino 24/7 (Reposición < 2 horas)">SLA Platino 24/7 (Reposición &lt; 2 horas)</option>
+                      <option value="SLA Oro Reposición 24h">SLA Oro Reposición 24h</option>
+                      <option value="SLA Estándar 48h">SLA Estándar 48h</option>
+                      <option value="SLA Básico por Demanda">SLA Básico por Demanda</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 mb-1.5">Ciudad Sede</label>
+                    <input
+                      type="text"
+                      placeholder="ej. Tarija"
+                      value={newClientForm.city}
+                      onChange={(e) => setNewClientForm({ ...newClientForm, city: e.target.value })}
+                      className="w-full px-3 py-2.5 bg-surface-container-low border border-outline-variant/30 rounded-xl text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 mb-1.5">Dirección Matriz / Oficina Central</label>
+                    <input
+                      type="text"
+                      placeholder="ej. Calle Sucre #120"
+                      value={newClientForm.address}
+                      onChange={(e) => setNewClientForm({ ...newClientForm, address: e.target.value })}
+                      className="w-full px-3 py-2.5 bg-surface-container-low border border-outline-variant/30 rounded-xl text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 mb-1.5">Notas y Términos Comerciales</label>
+                  <textarea
+                    rows={2}
+                    placeholder="Detalles sobre facturación, horarios de atención, requerimientos especiales de seguridad..."
+                    value={newClientForm.notes}
+                    onChange={(e) => setNewClientForm({ ...newClientForm, notes: e.target.value })}
+                    className="w-full px-3 py-2 bg-surface-container-low border border-outline-variant/30 rounded-xl text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                </div>
+
+                <div className="flex items-center justify-end gap-3 pt-4 border-t border-outline-variant/15">
+                  <button
+                    type="button"
+                    onClick={() => setClientModalTab('list')}
+                    className="px-4 py-2.5 bg-surface-container text-slate-600 rounded-xl text-xs font-bold hover:bg-surface-container-high transition-colors cursor-pointer"
+                  >
+                    Ver Directorio
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-5 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl text-xs font-bold shadow-md shadow-primary/25 flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">save</span>
+                    <span>Guardar Cliente Corporativo</span>
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Edit Client Modal */}
+      {isEditClientModalOpen && (
+        <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-surface-container-lowest rounded-3xl p-6 w-full max-w-xl shadow-2xl border border-outline-variant/30 my-8">
+            <div className="flex items-center justify-between pb-4 mb-4 border-b border-outline-variant/20">
+              <div className="flex items-center gap-2">
+                <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+                  <span className="material-symbols-outlined text-[20px]">edit</span>
+                </div>
+                <div>
+                  <h3 className="font-black text-base text-on-surface">Modificar Cliente Corporativo</h3>
+                  <p className="text-xs text-slate-400">Actualiza los datos del cliente y sincroniza sus sucursales</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setIsEditClientModalOpen(false)}
+                className="text-slate-400 hover:text-slate-600 cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[20px]">close</span>
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEditClient} className="space-y-4">
+              <div className="p-3 bg-amber-50 rounded-2xl border border-amber-200 text-amber-800 text-xs flex items-start gap-2">
+                <span className="material-symbols-outlined text-[18px] flex-shrink-0 text-amber-600">info</span>
+                <span>Al modificar la razón social o el código, todas las sucursales vinculadas a este cliente se actualizarán automáticamente.</span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-bold text-slate-500 mb-1.5">Razón Social / Nombre *</label>
+                  <input
+                    type="text"
+                    required
+                    value={editClientForm.name}
+                    onChange={(e) => setEditClientForm({ ...editClientForm, name: e.target.value })}
+                    className="w-full px-3 py-2.5 bg-surface-container-low border border-outline-variant/30 rounded-xl text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 mb-1.5">Código Único *</label>
+                  <input
+                    type="text"
+                    required
+                    maxLength={6}
+                    value={editClientForm.code}
+                    onChange={(e) => setEditClientForm({ ...editClientForm, code: e.target.value.toUpperCase() })}
+                    className="w-full px-3 py-2.5 bg-surface-container-low border border-outline-variant/30 rounded-xl text-xs font-mono font-bold uppercase text-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 mb-1.5">Persona de Contacto</label>
+                  <input
+                    type="text"
+                    value={editClientForm.contactPerson}
+                    onChange={(e) => setEditClientForm({ ...editClientForm, contactPerson: e.target.value })}
+                    className="w-full px-3 py-2.5 bg-surface-container-low border border-outline-variant/30 rounded-xl text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 mb-1.5">Teléfono / WhatsApp</label>
+                  <input
+                    type="text"
+                    value={editClientForm.contactPhone}
+                    onChange={(e) => setEditClientForm({ ...editClientForm, contactPhone: e.target.value })}
+                    className="w-full px-3 py-2.5 bg-surface-container-low border border-outline-variant/30 rounded-xl text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 mb-1.5">Correo Electrónico</label>
+                  <input
+                    type="email"
+                    value={editClientForm.contactEmail}
+                    onChange={(e) => setEditClientForm({ ...editClientForm, contactEmail: e.target.value })}
+                    className="w-full px-3 py-2.5 bg-surface-container-low border border-outline-variant/30 rounded-xl text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 mb-1.5">Acuerdo SLA</label>
+                  <select
+                    value={editClientForm.contractSla}
+                    onChange={(e) => setEditClientForm({ ...editClientForm, contractSla: e.target.value })}
+                    className="w-full px-3 py-2.5 bg-surface-container-low border border-outline-variant/30 rounded-xl text-xs font-bold text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
+                  >
+                    <option value="SLA Platino 24/7 (Reposición < 2 horas)">SLA Platino 24/7 (Reposición &lt; 2 horas)</option>
+                    <option value="SLA Oro Reposición 24h">SLA Oro Reposición 24h</option>
+                    <option value="SLA Estándar 48h">SLA Estándar 48h</option>
+                    <option value="SLA Básico por Demanda">SLA Básico por Demanda</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 mb-1.5">Ciudad</label>
+                  <input
+                    type="text"
+                    value={editClientForm.city}
+                    onChange={(e) => setEditClientForm({ ...editClientForm, city: e.target.value })}
+                    className="w-full px-3 py-2.5 bg-surface-container-low border border-outline-variant/30 rounded-xl text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 mb-1.5">Dirección Matriz</label>
+                  <input
+                    type="text"
+                    value={editClientForm.address}
+                    onChange={(e) => setEditClientForm({ ...editClientForm, address: e.target.value })}
+                    className="w-full px-3 py-2.5 bg-surface-container-low border border-outline-variant/30 rounded-xl text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-500 mb-1.5">Notas y Términos</label>
+                <textarea
+                  rows={2}
+                  value={editClientForm.notes}
+                  onChange={(e) => setEditClientForm({ ...editClientForm, notes: e.target.value })}
+                  className="w-full px-3 py-2 bg-surface-container-low border border-outline-variant/30 rounded-xl text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-outline-variant/15">
+                <button
+                  type="button"
+                  onClick={() => setIsEditClientModalOpen(false)}
+                  className="px-4 py-2.5 bg-surface-container text-slate-600 rounded-xl text-xs font-bold hover:bg-surface-container-high transition-colors cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl text-xs font-bold shadow-md shadow-primary/25 flex items-center gap-1.5 cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-[16px]">check</span>
+                  <span>Guardar Cambios</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Agency Modal */}
+      {isEditAgencyModalOpen && editAgencyForm && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-surface-container-lowest rounded-3xl p-6 w-full max-w-2xl shadow-2xl border border-outline-variant/30 my-8">
+            <div className="flex items-center justify-between pb-4 mb-4 border-b border-outline-variant/20">
+              <div className="flex items-center gap-2">
+                <div className="w-9 h-9 rounded-xl bg-slate-800 text-white flex items-center justify-center">
+                  <span className="material-symbols-outlined text-[20px]">edit_location_alt</span>
+                </div>
+                <div>
+                  <h3 className="font-black text-base text-on-surface">Modificar Sucursal / Agencia</h3>
+                  <p className="text-xs text-slate-400">Edita datos de ubicación, contacto y equipamiento asignado</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setIsEditAgencyModalOpen(false)}
+                className="text-slate-400 hover:text-slate-600 cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[20px]">close</span>
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEditAgency} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 mb-1.5">Cliente Asignado *</label>
+                  <select
+                    value={editAgencyForm.clientId}
+                    onChange={(e) => {
+                      const sel = clientOptions.find(c => c.id === e.target.value);
+                      setEditAgencyForm({
+                        ...editAgencyForm,
+                        clientId: e.target.value,
+                        clientName: sel?.name || editAgencyForm.clientName,
+                        clientCode: sel?.code || editAgencyForm.clientCode
+                      });
+                    }}
+                    className="w-full px-3 py-2.5 bg-surface-container-low border border-outline-variant/30 rounded-xl text-xs font-bold text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
+                  >
+                    {clientOptions.map(c => (
+                      <option key={c.id} value={c.id}>{c.name} ({c.code})</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 mb-1.5">Nombre de Sucursal *</label>
+                  <input
+                    type="text"
+                    required
+                    value={editAgencyForm.agencyName}
+                    onChange={(e) => setEditAgencyForm({ ...editAgencyForm, agencyName: e.target.value })}
+                    className="w-full px-3 py-2.5 bg-surface-container-low border border-outline-variant/30 rounded-xl text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 mb-1.5">Ciudad *</label>
+                  <input
+                    type="text"
+                    required
+                    value={editAgencyForm.city}
+                    onChange={(e) => setEditAgencyForm({ ...editAgencyForm, city: e.target.value })}
+                    className="w-full px-3 py-2.5 bg-surface-container-low border border-outline-variant/30 rounded-xl text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 mb-1.5">Dirección Completa *</label>
+                  <input
+                    type="text"
+                    required
+                    value={editAgencyForm.address}
+                    onChange={(e) => setEditAgencyForm({ ...editAgencyForm, address: e.target.value })}
+                    className="w-full px-3 py-2.5 bg-surface-container-low border border-outline-variant/30 rounded-xl text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 mb-1.5">Latitud GPS</label>
+                  <input
+                    type="number"
+                    step="0.0001"
+                    value={editAgencyForm.lat}
+                    onChange={(e) => setEditAgencyForm({ ...editAgencyForm, lat: e.target.value })}
+                    className="w-full px-3 py-2.5 bg-surface-container-low border border-outline-variant/30 rounded-xl text-xs font-mono text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 mb-1.5">Longitud GPS</label>
+                  <input
+                    type="number"
+                    step="0.0001"
+                    value={editAgencyForm.lng}
+                    onChange={(e) => setEditAgencyForm({ ...editAgencyForm, lng: e.target.value })}
+                    className="w-full px-3 py-2.5 bg-surface-container-low border border-outline-variant/30 rounded-xl text-xs font-mono text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 mb-1.5">Responsable en Sucursal</label>
+                  <input
+                    type="text"
+                    value={editAgencyForm.contactPerson}
+                    onChange={(e) => setEditAgencyForm({ ...editAgencyForm, contactPerson: e.target.value })}
+                    className="w-full px-3 py-2.5 bg-surface-container-low border border-outline-variant/30 rounded-xl text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 mb-1.5">Teléfono / Celular</label>
+                  <input
+                    type="text"
+                    value={editAgencyForm.contactPhone}
+                    onChange={(e) => setEditAgencyForm({ ...editAgencyForm, contactPhone: e.target.value })}
+                    className="w-full px-3 py-2.5 bg-surface-container-low border border-outline-variant/30 rounded-xl text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 mb-1.5">Correo Electrónico</label>
+                  <input
+                    type="email"
+                    value={editAgencyForm.contactEmail}
+                    onChange={(e) => setEditAgencyForm({ ...editAgencyForm, contactEmail: e.target.value })}
+                    className="w-full px-3 py-2.5 bg-surface-container-low border border-outline-variant/30 rounded-xl text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                </div>
+              </div>
+
+              {/* Toners in Agency Table / Stock editor */}
+              <div className="bg-surface-container-low p-4 rounded-2xl border border-outline-variant/20 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-black uppercase tracking-wider text-slate-500">
+                    Control de Tóners de Reserva
+                  </span>
+                  <span className="text-[11px] text-slate-400">Modifica stock y umbrales mínimos</span>
+                </div>
+
+                <div className="space-y-2">
+                  {(editAgencyForm.toners || []).map((toner, idx) => (
+                    <div key={toner.id || idx} className="grid grid-cols-1 sm:grid-cols-4 gap-2 items-center bg-white p-2.5 rounded-xl border border-outline-variant/20 text-xs">
+                      <div className="sm:col-span-2">
+                        <span className="font-bold text-slate-800 block truncate">{toner.model}</span>
+                        <span className="text-[10px] text-slate-400">{toner.compatiblePrinter}</span>
+                      </div>
+                      <div>
+                        <label className="block text-[10px] text-slate-400 font-bold">Stock Reserva</label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={toner.currentStock}
+                          onChange={(e) => {
+                            const val = parseInt(e.target.value, 10) || 0;
+                            const newToners = [...editAgencyForm.toners];
+                            newToners[idx] = { ...newToners[idx], currentStock: val };
+                            setEditAgencyForm({ ...editAgencyForm, toners: newToners });
+                          }}
+                          className="w-full px-2 py-1 border border-slate-200 rounded-lg font-mono text-center text-xs font-bold"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] text-slate-400 font-bold">Mínimo Alerta</label>
+                        <input
+                          type="number"
+                          min="1"
+                          value={toner.minStock}
+                          onChange={(e) => {
+                            const val = parseInt(e.target.value, 10) || 1;
+                            const newToners = [...editAgencyForm.toners];
+                            newToners[idx] = { ...newToners[idx], minStock: val };
+                            setEditAgencyForm({ ...editAgencyForm, toners: newToners });
+                          }}
+                          className="w-full px-2 py-1 border border-slate-200 rounded-lg font-mono text-center text-xs font-bold"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-outline-variant/15">
+                <button
+                  type="button"
+                  onClick={() => setIsEditAgencyModalOpen(false)}
+                  className="px-4 py-2.5 bg-surface-container text-slate-600 rounded-xl text-xs font-bold hover:bg-surface-container-high transition-colors cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl text-xs font-bold shadow-md shadow-primary/25 flex items-center gap-1.5 cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-[16px]">check</span>
+                  <span>Guardar Sucursal</span>
                 </button>
               </div>
             </form>

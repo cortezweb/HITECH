@@ -274,6 +274,45 @@ const initialMockTickets = [
   }
 ];
 
+export const initialMockOutsourcingClients = [
+  {
+    id: 'CLI-BANCO-UNION',
+    name: 'Banco Unión S.A.',
+    code: 'BUN',
+    contactPerson: 'Lic. Mariana Valdez (Jefe Operativo)',
+    contactPhone: '+591 71829304',
+    contactEmail: 'mvaldez@bancounion.com.bo',
+    contractSla: 'SLA Platino 24/7 (Reposición < 2 horas)',
+    city: 'Tarija',
+    address: 'Calle Sucre esq. 15 de Abril N° 450, Zona Central',
+    notes: 'Entidad financiera con alta demanda de consumibles e impresoras HP y Kyocera.'
+  },
+  {
+    id: 'CLI-BANCO-FIE',
+    name: 'Banco FIE S.A.',
+    code: 'FIE',
+    contactPerson: 'Lic. Marco Antonio Flores (Jefe de Agencia)',
+    contactPhone: '+591 73491022',
+    contactEmail: 'mflores@bancofie.com.bo',
+    contractSla: 'SLA Oro Reposición 24h',
+    city: 'Tarija',
+    address: 'Calle Daniel Campos N° 340 e/ C. Ingavi y Bolívar',
+    notes: 'Agencia bancaria microfinanciera orientada a créditos y atención ciudadana.'
+  },
+  {
+    id: 'CLI-BANCO-BNB',
+    name: 'Banco Nacional de Bolivia (BNB)',
+    code: 'BNB',
+    contactPerson: 'Lic. Andrea Soliz (Supervisora)',
+    contactPhone: '+591 75129840',
+    contactEmail: 'asoliz@bnb.com.bo',
+    contractSla: 'SLA Estándar 48h',
+    city: 'Bermejo',
+    address: 'Av. Barrientos Ortuño N° 340, Bermejo',
+    notes: 'Sucursal fronteriza Bermejo.'
+  }
+];
+
 export const initialMockOutsourcingAgencies = [
   {
     id: 'AG-BU-01',
@@ -584,7 +623,41 @@ export const AppProvider = ({ children }) => {
   const [products, setProducts] = useState(initialMockProducts);
   const [tickets, setTickets] = useState(initialMockTickets);
   const [sales, setSales] = useState([]);
-  const [outsourcingAgencies, setOutsourcingAgencies] = useState(initialMockOutsourcingAgencies);
+  const [outsourcingClients, setOutsourcingClients] = useState(() => {
+    try {
+      const saved = localStorage.getItem('sistech_outsourcing_clients');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.warn('Error reading outsourcing clients:', e);
+    }
+    return initialMockOutsourcingClients;
+  });
+
+  const [outsourcingAgencies, setOutsourcingAgencies] = useState(() => {
+    try {
+      const saved = localStorage.getItem('sistech_outsourcing_agencies');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.warn('Error reading outsourcing agencies:', e);
+    }
+    return initialMockOutsourcingAgencies;
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('sistech_outsourcing_clients', JSON.stringify(outsourcingClients));
+    } catch (e) {
+      console.warn('Error saving outsourcing clients to localStorage:', e);
+    }
+  }, [outsourcingClients]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('sistech_outsourcing_agencies', JSON.stringify(outsourcingAgencies));
+    } catch (e) {
+      console.warn('Error saving outsourcing agencies to localStorage:', e);
+    }
+  }, [outsourcingAgencies]);
 
   // Custom Settings, Users and Audit states
   const [users, setUsers] = useState([
@@ -845,13 +918,40 @@ export const AppProvider = ({ children }) => {
     }
   ]);
 
-  const [urgentTasks, setUrgentTasks] = useState([
-    { date: '30 Nov 2024', desc: 'Safety inspection on site 04', urgent: true },
-    { date: '24 Dec 2024', desc: 'Emergency generator service', urgent: true },
-    { date: '24 Oct 2024', desc: 'Client feedback meeting', urgent: false },
-    { date: '24 Nov 2024', desc: 'Technician debriefing', urgent: false },
-    { date: '24 Nov 2024', desc: 'Inventory audit report', urgent: false }
-  ]);
+  const [urgentTasks, setUrgentTasks] = useState(() => {
+    try {
+      const saved = localStorage.getItem('sistech_urgent_tasks');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {
+      console.warn('Error reading urgent tasks:', e);
+    }
+    return [
+      { id: 'TSK-1', date: 'Hoy, 15:30', desc: 'Revisión y mantenimiento de servidor de base de datos', urgent: true },
+      { id: 'TSK-2', date: 'Mañana', desc: 'Reposición preventiva de tóners en Banco Unión Suc. Campesino', urgent: true },
+      { id: 'TSK-3', date: '18 Sep', desc: 'Entrega de equipo Lenovo ThinkPad reparado', urgent: false },
+      { id: 'TSK-4', date: '20 Sep', desc: 'Auditoría mensual de inventario y repuestos', urgent: false }
+    ];
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('sistech_urgent_tasks', JSON.stringify(urgentTasks));
+    } catch (e) {
+      console.warn('Error saving urgent tasks:', e);
+    }
+  }, [urgentTasks]);
+
+  const addUrgentTask = (taskData) => {
+    const newTask = {
+      id: `TSK-${Date.now()}`,
+      date: taskData.date || new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }),
+      desc: taskData.desc,
+      urgent: !!taskData.urgent
+    };
+    setUrgentTasks(prev => [newTask, ...prev]);
+    logActivity('Nueva Tarea', `Se agregó la tarea pendiente: ${newTask.desc}`);
+    return newTask;
+  };
 
   // Supabase Initial Fetch & Realtime Subscriptions
   useEffect(() => {
@@ -1168,6 +1268,44 @@ export const AppProvider = ({ children }) => {
     logActivity('Añadir Producto', `Se añadió el producto SKU ${newProd.id} (${newProd.name}) al inventario.`);
   };
 
+  const updateInventoryProduct = async (productId, fields) => {
+    setProducts(prev => prev.map(p => {
+      if (p.id === productId) {
+        const newStock = fields.stock !== undefined ? (parseInt(fields.stock, 10) || 0) : p.stock;
+        const newPrice = fields.price !== undefined ? (parseFloat(fields.price) || 0) : p.price;
+        const newCost = fields.cost !== undefined ? (parseFloat(fields.cost) || 0) : p.cost;
+        const newStatus = newStock === 0 ? 'Out of Stock' : (newStock <= 15 ? 'Low Stock' : 'In Stock');
+        const updated = {
+          ...p,
+          ...fields,
+          stock: newStock,
+          price: newPrice,
+          cost: newCost,
+          status: newStatus
+        };
+        if (isSupabaseConfigured && supabase) {
+          supabase.from('products').update(mapProductToDb(updated)).eq('id', productId).catch(console.warn);
+        }
+        return updated;
+      }
+      return p;
+    }));
+    logActivity('Editar Producto', `Se modificó el producto SKU ${productId}.`);
+  };
+
+  const deleteInventoryProduct = async (productId) => {
+    const target = products.find(p => p.id === productId);
+    if (isSupabaseConfigured && supabase) {
+      supabase.from('products').delete().eq('id', productId).catch(console.warn);
+    }
+    setProducts(prev => prev.filter(p => p.id !== productId));
+    if (selectedInventoryItem?.id === productId) {
+      setSelectedInventoryItem(null);
+      setSubstate('inventory', 'moderno');
+    }
+    logActivity('Eliminar Producto', `Se eliminó el producto SKU ${productId} (${target?.name || ''}).`);
+  };
+
   // Add service ticket directly to Supabase & State
   const addServiceTicket = async (ticketData) => {
     const nextNum = String(Math.floor(100 + Math.random() * 900));
@@ -1328,10 +1466,103 @@ export const AppProvider = ({ children }) => {
   };
 
   const updateAgency = async (agencyId, fields) => {
-    if (isSupabaseConfigured && supabase) {
+    let updatedAgencyObj = null;
+    setOutsourcingAgencies(prev => prev.map(a => {
+      if (a.id === agencyId) {
+        updatedAgencyObj = { ...a, ...fields, updated_at: new Date().toISOString() };
+        return updatedAgencyObj;
+      }
+      return a;
+    }));
+    if (isSupabaseConfigured && supabase && updatedAgencyObj) {
       supabase.from('outsourcing_agencies').update(fields).eq('id', agencyId).catch(console.warn);
     }
-    setOutsourcingAgencies(prev => prev.map(a => a.id === agencyId ? { ...a, ...fields } : a));
+    logActivity('Modificar Sucursal', `Se modificaron los datos de la sucursal ${fields.agencyName || agencyId}.`);
+    return updatedAgencyObj;
+  };
+
+  const deleteAgency = async (agencyId) => {
+    const target = outsourcingAgencies.find(a => a.id === agencyId);
+    if (isSupabaseConfigured && supabase) {
+      supabase.from('outsourcing_agencies').delete().eq('id', agencyId).catch(console.warn);
+    }
+    setOutsourcingAgencies(prev => prev.filter(a => a.id !== agencyId));
+    logActivity('Eliminar Sucursal', `Se eliminó la sucursal ${target ? target.agencyName : agencyId}.`);
+  };
+
+  // Outsourcing Client Management Methods
+  const addOutsourcingClient = async (clientData) => {
+    const clientCode = (clientData.code || 'CLI').toUpperCase().trim();
+    const clientId = clientData.id || `CLI-${clientCode}-${Math.floor(100 + Math.random() * 900)}`;
+    const newClient = {
+      id: clientId,
+      name: clientData.name,
+      code: clientCode,
+      contactPerson: clientData.contactPerson || 'Contacto Corporativo',
+      contactPhone: clientData.contactPhone || '+591 70000000',
+      contactEmail: clientData.contactEmail || '',
+      contractSla: clientData.contractSla || 'SLA Estándar 24/7',
+      city: clientData.city || 'Tarija',
+      address: clientData.address || '',
+      notes: clientData.notes || '',
+      created_at: new Date().toISOString()
+    };
+
+    setOutsourcingClients(prev => [...prev, newClient]);
+    logActivity('Crear Cliente Outsourcing', `Se registró el cliente corporativo ${newClient.name} (${newClient.code}).`);
+    return newClient;
+  };
+
+  const updateOutsourcingClient = async (clientId, fields) => {
+    const clientCode = fields.code ? fields.code.toUpperCase().trim() : undefined;
+    const updatedFields = { ...fields };
+    if (clientCode) updatedFields.code = clientCode;
+
+    setOutsourcingClients(prev => {
+      const exists = prev.some(c => c.id === clientId);
+      if (exists) {
+        return prev.map(c => c.id === clientId ? { ...c, ...updatedFields } : c);
+      }
+      return [...prev, { id: clientId, ...updatedFields }];
+    });
+
+    // Cascade update to all agencies belonging to this client!
+    setOutsourcingAgencies(prev => prev.map(agency => {
+      if (agency.clientId === clientId) {
+        const updated = {
+          ...agency,
+          clientName: fields.name || agency.clientName,
+          clientCode: clientCode || agency.clientCode
+        };
+        if (isSupabaseConfigured && supabase) {
+          supabase.from('outsourcing_agencies').update({
+            clientName: updated.clientName,
+            clientCode: updated.clientCode
+          }).eq('id', agency.id).catch(console.warn);
+        }
+        return updated;
+      }
+      return agency;
+    }));
+
+    logActivity('Modificar Cliente Outsourcing', `Se actualizaron los datos del cliente ${fields.name || clientId}.`);
+  };
+
+  const deleteOutsourcingClient = async (clientId) => {
+    const target = outsourcingClients.find(c => c.id === clientId);
+    const hasAgencies = outsourcingAgencies.some(a => a.clientId === clientId);
+    if (hasAgencies) {
+      const confirmAll = confirm(`El cliente "${target?.name || clientId}" tiene sucursales registradas. ¿Deseas eliminar el cliente y todas sus sucursales vinculadas?`);
+      if (!confirmAll) return false;
+      
+      setOutsourcingAgencies(prev => prev.filter(a => a.clientId !== clientId));
+      if (isSupabaseConfigured && supabase) {
+        supabase.from('outsourcing_agencies').delete().eq('clientId', clientId).catch(console.warn);
+      }
+    }
+    setOutsourcingClients(prev => prev.filter(c => c.id !== clientId));
+    logActivity('Eliminar Cliente Outsourcing', `Se eliminó el cliente corporativo ${target ? target.name : clientId}.`);
+    return true;
   };
 
   // Consume / Install Toner in Printer (deduct from agency backup reserve)
@@ -1457,11 +1688,20 @@ export const AppProvider = ({ children }) => {
       addServicePaymentToCart,
       outsourcingAgencies,
       setOutsourcingAgencies,
+      outsourcingClients,
+      setOutsourcingClients,
+      addOutsourcingClient,
+      updateOutsourcingClient,
+      deleteOutsourcingClient,
       addAgencyTonerStock,
       requestAgencyRestock,
       addOutsourcingAgency,
       updateAgency,
-      consumeAgencyToner
+      deleteAgency,
+      consumeAgencyToner,
+      updateInventoryProduct,
+      deleteInventoryProduct,
+      addUrgentTask
     }}>
       {children}
     </AppContext.Provider>

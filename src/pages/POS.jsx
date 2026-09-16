@@ -108,6 +108,36 @@ export default function POS() {
     checkoutCart(paymentMethod, discountAmount);
   };
 
+  // Split payment modal state
+  const [showSplitPaymentModal, setShowSplitPaymentModal] = useState(false);
+  const [splitCashAmount, setSplitCashAmount] = useState('');
+  const [splitDigitalAmount, setSplitDigitalAmount] = useState('');
+  const [splitDigitalType, setSplitDigitalType] = useState('Card'); // 'Card' or 'QR'
+
+  // Product quick details modal
+  const [quickProductModal, setQuickProductModal] = useState(null);
+
+  const handleOpenSplitPayment = () => {
+    const half = (total / 2).toFixed(2);
+    const otherHalf = (total - parseFloat(half)).toFixed(2);
+    setSplitCashAmount(half);
+    setSplitDigitalAmount(otherHalf);
+    setShowSplitPaymentModal(true);
+  };
+
+  const handleConfirmSplitPayment = () => {
+    const cashVal = parseFloat(splitCashAmount) || 0;
+    const digitalVal = parseFloat(splitDigitalAmount) || 0;
+    if (Math.abs((cashVal + digitalVal) - total) > 0.05) {
+      alert(`La suma ($${(cashVal + digitalVal).toFixed(2)}) debe igualar el total exacto ($${total.toFixed(2)})`);
+      return;
+    }
+    const digitalLabel = splitDigitalType === 'Card' ? 'Tarjeta' : 'QR';
+    const splitMethodName = `Dividido (Efectivo: $${cashVal.toFixed(2)} + ${digitalLabel}: $${digitalVal.toFixed(2)})`;
+    checkoutCart(splitMethodName, discountAmount);
+    setShowSplitPaymentModal(false);
+  };
+
   const currentSubstate = substates.pos;
 
   // Success view
@@ -147,7 +177,9 @@ export default function POS() {
                     ? 'Efectivo' 
                     : receipt.paymentMethod === 'Card' 
                       ? 'Tarjeta' 
-                      : 'QR / Yape'}
+                      : receipt.paymentMethod === 'QR'
+                        ? 'QR / Yape'
+                        : receipt.paymentMethod}
                 </span>
               </div>
               {receipt.discount > 0 && (
@@ -633,10 +665,12 @@ export default function POS() {
 
           <div className="mt-8 flex gap-4">
             <button 
-              onClick={() => alert('Métodos de pago divididos - Próximamente')}
-              className="flex-1 py-4 rounded-xl bg-surface-container-high text-on-surface font-semibold hover:bg-surface-container-highest transition-all cursor-pointer text-center text-[14px]"
+              type="button"
+              onClick={handleOpenSplitPayment}
+              className="flex-1 py-4 rounded-xl bg-surface-container-high text-on-surface font-semibold hover:bg-surface-container-highest transition-all cursor-pointer text-center text-[14px] flex items-center justify-center gap-1.5"
             >
-              Pago Dividido
+              <span className="material-symbols-outlined text-[18px]">call_split</span>
+              <span>Pago Dividido</span>
             </button>
             <button
               onClick={handleCompleteTransaction}
@@ -647,6 +681,163 @@ export default function POS() {
             </button>
           </div>
         </div>
+
+        {/* Modal: Pago Dividido */}
+        {showSplitPaymentModal && (
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+            <div className="bg-surface border border-outline-variant/30 rounded-3xl p-6 max-w-md w-full shadow-2xl animate-fade-in text-left">
+              <div className="flex items-center justify-between pb-4 mb-4 border-b border-outline-variant/10">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-10 h-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
+                    <span className="material-symbols-outlined text-[22px]">call_split</span>
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-[16px] text-on-surface">Pago Dividido (Split)</h3>
+                    <p className="text-[12px] text-on-surface-variant">Combina efectivo y pago digital</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowSplitPaymentModal(false)}
+                  className="p-1.5 hover:bg-surface-container rounded-full text-on-surface-variant transition-colors cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-[20px]">close</span>
+                </button>
+              </div>
+
+              {/* Total to cover */}
+              <div className="bg-surface-container-low p-4 rounded-2xl border border-outline-variant/20 mb-4 flex items-center justify-between">
+                <div>
+                  <span className="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider block">Total de la Venta</span>
+                  <span className="text-[22px] font-black text-primary">${total.toFixed(2)}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const half = (total / 2).toFixed(2);
+                    const rem = (total - parseFloat(half)).toFixed(2);
+                    setSplitCashAmount(half);
+                    setSplitDigitalAmount(rem);
+                  }}
+                  className="px-3 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary text-[11px] font-bold rounded-xl border border-primary/20 transition-all cursor-pointer"
+                >
+                  50% / 50%
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {/* Method 1: Cash */}
+                <div>
+                  <label className="block text-[12px] font-bold text-on-surface-variant mb-1 flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-[16px] text-emerald-600">payments</span>
+                    <span>Monto en Efectivo ($)</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={splitCashAmount}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setSplitCashAmount(val);
+                        const num = parseFloat(val) || 0;
+                        setSplitDigitalAmount(Math.max(0, total - num).toFixed(2));
+                      }}
+                      className="w-full px-3.5 py-2.5 bg-surface-container-low border border-outline-variant/30 rounded-xl text-[14px] font-bold text-on-surface focus:outline-none focus:border-primary"
+                    />
+                  </div>
+                </div>
+
+                {/* Method 2: Digital Type & Amount */}
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-[12px] font-bold text-on-surface-variant flex items-center gap-1.5">
+                      <span className="material-symbols-outlined text-[16px] text-blue-600">
+                        {splitDigitalType === 'Card' ? 'credit_card' : 'qr_code_2'}
+                      </span>
+                      <span>Monto Digital ($)</span>
+                    </label>
+                    <div className="flex rounded-lg border border-outline-variant/30 overflow-hidden text-[11px] font-bold">
+                      <button
+                        type="button"
+                        onClick={() => setSplitDigitalType('Card')}
+                        className={`px-2.5 py-1 ${splitDigitalType === 'Card' ? 'bg-primary text-white' : 'bg-surface-container-low text-on-surface-variant'}`}
+                      >
+                        Tarjeta
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setSplitDigitalType('QR')}
+                        className={`px-2.5 py-1 ${splitDigitalType === 'QR' ? 'bg-primary text-white' : 'bg-surface-container-low text-on-surface-variant'}`}
+                      >
+                        QR / Yape
+                      </button>
+                    </div>
+                  </div>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={splitDigitalAmount}
+                    onChange={(e) => setSplitDigitalAmount(e.target.value)}
+                    className="w-full px-3.5 py-2.5 bg-surface-container-low border border-outline-variant/30 rounded-xl text-[14px] font-bold text-on-surface focus:outline-none focus:border-primary"
+                  />
+                </div>
+
+                {/* Validation status badge */}
+                {(() => {
+                  const c = parseFloat(splitCashAmount) || 0;
+                  const d = parseFloat(splitDigitalAmount) || 0;
+                  const diff = total - (c + d);
+                  const isOk = Math.abs(diff) < 0.05;
+
+                  if (isOk) {
+                    return (
+                      <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-700 dark:text-emerald-400 text-[12px] font-bold flex items-center gap-2">
+                        <span className="material-symbols-outlined text-[18px]">check_circle</span>
+                        <span>Monto total cubierto ($${(c + d).toFixed(2)})</span>
+                      </div>
+                    );
+                  }
+                  if (diff > 0) {
+                    return (
+                      <div className="p-2.5 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-700 dark:text-amber-400 text-[12px] font-bold flex items-center gap-2">
+                        <span className="material-symbols-outlined text-[18px]">warning</span>
+                        <span>Falta por cubrir: ${diff.toFixed(2)}</span>
+                      </div>
+                    );
+                  }
+                  return (
+                    <div className="p-2.5 bg-error/10 border border-error/20 rounded-xl text-error text-[12px] font-bold flex items-center gap-2">
+                      <span className="material-symbols-outlined text-[18px]">error</span>
+                      <span>Excede el total por: ${Math.abs(diff).toFixed(2)}</span>
+                    </div>
+                  );
+                })()}
+              </div>
+
+              <div className="flex gap-3 pt-4 mt-5 border-t border-outline-variant/10">
+                <button
+                  type="button"
+                  onClick={() => setShowSplitPaymentModal(false)}
+                  className="flex-1 py-2.5 border border-outline-variant/30 rounded-xl text-[13px] font-bold text-on-surface-variant hover:bg-surface-container transition-colors cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmSplitPayment}
+                  disabled={Math.abs(total - ((parseFloat(splitCashAmount) || 0) + (parseFloat(splitDigitalAmount) || 0))) >= 0.05}
+                  className="flex-1 py-2.5 bg-primary disabled:opacity-50 disabled:pointer-events-none text-on-primary rounded-xl text-[13px] font-bold hover:brightness-105 transition-all shadow-md cursor-pointer flex items-center justify-center gap-1.5"
+                >
+                  <span className="material-symbols-outlined text-[16px]">task_alt</span>
+                  <span>Confirmar y Cobrar</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -1170,8 +1361,9 @@ export default function POS() {
                             Agregar al Carrito
                           </button>
                           <button 
-                            onClick={() => alert(`Detalles de ${product.name}: SKU ${product.id}`)}
+                            onClick={() => setQuickProductModal(product)}
                             className="p-3 border border-outline-variant/30 rounded-xl hover:bg-surface-container-low transition-all text-primary cursor-pointer flex items-center justify-center"
+                            title="Ver detalles del producto"
                           >
                             <span className="material-symbols-outlined text-[20px]">info</span>
                           </button>
@@ -1197,21 +1389,40 @@ export default function POS() {
                     </div>
                   ) : null}
 
-                  <div className="h-36 rounded-xl overflow-hidden mb-4 bg-surface-container-low flex items-center justify-center p-2">
+                  <div 
+                    onClick={() => setQuickProductModal(product)}
+                    className="h-36 rounded-xl overflow-hidden mb-4 bg-surface-container-low flex items-center justify-center p-2 cursor-pointer"
+                    title="Ver detalles"
+                  >
                     <img className="w-full h-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-300" alt={product.name} src={product.image} />
                   </div>
-                  <h3 className="text-[15px] font-bold text-on-surface mb-1 group-hover:text-primary transition-colors">{product.name}</h3>
+                  <h3 
+                    onClick={() => setQuickProductModal(product)}
+                    className="text-[15px] font-bold text-on-surface mb-1 group-hover:text-primary transition-colors cursor-pointer"
+                  >
+                    {product.name}
+                  </h3>
                   <p className="text-[12px] text-on-surface-variant truncate mb-4">{product.desc}</p>
                   
                   <div className="mt-auto flex items-center justify-between">
                     <span className="text-[18px] font-black text-on-surface">${product.price.toFixed(2)}</span>
-                    <button 
-                      onClick={() => addToCart(product)}
-                      disabled={isOut}
-                      className="w-9 h-9 rounded-full bg-secondary disabled:bg-outline-variant/30 text-on-secondary disabled:text-on-surface-variant/40 flex items-center justify-center hover:scale-105 active:scale-90 disabled:scale-100 transition-all cursor-pointer"
-                    >
-                      <span className="material-symbols-outlined text-[20px]">add_shopping_cart</span>
-                    </button>
+                    <div className="flex items-center gap-1.5">
+                      <button 
+                        onClick={() => setQuickProductModal(product)}
+                        className="w-9 h-9 rounded-full border border-outline-variant/30 hover:bg-surface-container-low text-primary flex items-center justify-center transition-all cursor-pointer"
+                        title="Ver detalles"
+                      >
+                        <span className="material-symbols-outlined text-[18px]">info</span>
+                      </button>
+                      <button 
+                        onClick={() => addToCart(product)}
+                        disabled={isOut}
+                        className="w-9 h-9 rounded-full bg-secondary disabled:bg-outline-variant/30 text-on-secondary disabled:text-on-surface-variant/40 flex items-center justify-center hover:scale-105 active:scale-90 disabled:scale-100 transition-all cursor-pointer"
+                        title="Agregar al carrito"
+                      >
+                        <span className="material-symbols-outlined text-[20px]">add_shopping_cart</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
               );
@@ -1725,6 +1936,91 @@ export default function POS() {
                   <span>Autorizar Acción</span>
                 </button>
               </form>
+            </div>
+          </div>
+        )}
+
+        {/* Modal: Detalles Rápidos del Producto */}
+        {quickProductModal && (
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+            <div className="bg-surface border border-outline-variant/30 rounded-3xl p-6 max-w-md w-full shadow-2xl animate-fade-in text-left">
+              <div className="flex items-center justify-between pb-3 mb-4 border-b border-outline-variant/10">
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-primary/10 text-primary uppercase tracking-wider">
+                    {quickProductModal.category}
+                  </span>
+                  <span className="text-[11px] font-mono text-on-surface-variant">
+                    SKU: {quickProductModal.id}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setQuickProductModal(null)}
+                  className="p-1.5 hover:bg-surface-container rounded-full text-on-surface-variant transition-colors cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-[20px]">close</span>
+                </button>
+              </div>
+
+              <div className="h-44 rounded-2xl bg-surface-container-low flex items-center justify-center p-4 mb-4 border border-outline-variant/20">
+                <img
+                  src={quickProductModal.image}
+                  alt={quickProductModal.name}
+                  className="max-h-full max-w-full object-contain mix-blend-multiply"
+                />
+              </div>
+
+              <h3 className="text-[18px] font-bold text-on-surface leading-snug mb-1">
+                {quickProductModal.name}
+              </h3>
+              <p className="text-[13px] text-on-surface-variant mb-4 leading-relaxed">
+                {quickProductModal.desc || 'Sin descripción detallada registrada para este artículo.'}
+              </p>
+
+              <div className="grid grid-cols-2 gap-3 p-3.5 bg-surface-container-low rounded-2xl border border-outline-variant/20 mb-5">
+                <div>
+                  <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider block">Precio Unitario</span>
+                  <span className="text-[20px] font-black text-primary">${quickProductModal.price.toFixed(2)}</span>
+                </div>
+                <div>
+                  <span className="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider block">Disponibilidad</span>
+                  {quickProductModal.stock <= 0 ? (
+                    <span className="text-[13px] font-bold text-error flex items-center gap-1 mt-1">
+                      <span className="material-symbols-outlined text-[16px]">cancel</span> Agotado
+                    </span>
+                  ) : quickProductModal.stock <= 15 ? (
+                    <span className="text-[13px] font-bold text-amber-600 dark:text-amber-400 flex items-center gap-1 mt-1">
+                      <span className="material-symbols-outlined text-[16px]">warning</span> Crítico ({quickProductModal.stock})
+                    </span>
+                  ) : (
+                    <span className="text-[13px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1 mt-1">
+                      <span className="material-symbols-outlined text-[16px]">check_circle</span> {quickProductModal.stock} unidades
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setQuickProductModal(null)}
+                  className="flex-1 py-3 border border-outline-variant/30 rounded-xl text-[13px] font-bold text-on-surface-variant hover:bg-surface-container transition-colors cursor-pointer"
+                >
+                  Cerrar
+                </button>
+                <button
+                  type="button"
+                  disabled={quickProductModal.stock <= 0}
+                  onClick={() => {
+                    addToCart(quickProductModal);
+                    setQuickProductModal(null);
+                  }}
+                  className="flex-[2] py-3 bg-primary disabled:opacity-50 disabled:pointer-events-none text-on-primary rounded-xl text-[13px] font-bold hover:brightness-105 transition-all shadow-md cursor-pointer flex items-center justify-center gap-2"
+                >
+                  <span className="material-symbols-outlined text-[18px]">add_shopping_cart</span>
+                  <span>Agregar al Carrito</span>
+                </button>
+              </div>
             </div>
           </div>
         )}

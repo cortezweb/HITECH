@@ -46,11 +46,17 @@ export default function Dashboard() {
     setPage,
     products,
     currentUser,
-    shopInfo
+    shopInfo,
+    addUrgentTask
   } = useApp();
 
   const [time, setTime] = React.useState(new Date());
   const [weather, setWeather] = React.useState({ loading: true, data: null, error: null });
+  const [showFullHistory, setShowFullHistory] = React.useState(false);
+  const [isTasksModalOpen, setIsTasksModalOpen] = React.useState(false);
+  const [isNewTaskModalOpen, setIsNewTaskModalOpen] = React.useState(false);
+  const [newTaskDesc, setNewTaskDesc] = React.useState('');
+  const [newTaskIsUrgent, setNewTaskIsUrgent] = React.useState(false);
 
   React.useEffect(() => {
     const timer = setInterval(() => {
@@ -729,14 +735,33 @@ export default function Dashboard() {
                         <p className="text-[14px] text-on-surface font-medium">Pruebas y aseguramiento de calidad en tuberías de refrigerante</p>
                       </div>
                     </div>
+                    {showFullHistory && (
+                      <>
+                        <div className="relative">
+                          <div className="absolute -left-[24px] top-1 w-4.5 h-4.5 rounded-full bg-secondary ring-4 ring-white"></div>
+                          <div>
+                            <p className="text-[12px] text-on-surface-variant font-semibold">18 Nov 2026</p>
+                            <p className="text-[14px] text-on-surface font-medium">Reemplazo de kit de fusor y rodillos de arrastre en impresora HP</p>
+                          </div>
+                        </div>
+                        <div className="relative">
+                          <div className="absolute -left-[24px] top-1 w-4.5 h-4.5 rounded-full bg-slate-400 ring-4 ring-white"></div>
+                          <div>
+                            <p className="text-[12px] text-on-surface-variant font-semibold">15 Nov 2026</p>
+                            <p className="text-[14px] text-on-surface font-medium">Mantenimiento correctivo de tarjeta madre y cambio de pasta térmica</p>
+                          </div>
+                        </div>
+                      </>
+                    )}
                   </div>
                   
                   <div className="mt-8 pt-4 border-t border-outline-variant/20 flex justify-center">
                     <button 
-                      onClick={() => alert('Cargando más historial...')} 
-                      className="text-primary text-[13px] font-bold hover:underline cursor-pointer"
+                      onClick={() => setShowFullHistory(!showFullHistory)} 
+                      className="text-primary text-[13px] font-bold hover:underline cursor-pointer flex items-center gap-1"
                     >
-                      Cargar más historial
+                      <span>{showFullHistory ? 'Mostrar menos eventos' : 'Cargar más historial'}</span>
+                      <span className="material-symbols-outlined text-[16px]">{showFullHistory ? 'expand_less' : 'expand_more'}</span>
                     </button>
                   </div>
                 </>
@@ -864,8 +889,9 @@ export default function Dashboard() {
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-[16px] font-bold text-on-surface">Equipo de Turno</h3>
               <button 
-                onClick={() => alert('Administrar equipo')} 
-                className="text-secondary text-[12px] font-semibold hover:underline"
+                onClick={() => setPage('settings')} 
+                className="text-secondary text-[12px] font-semibold hover:underline cursor-pointer"
+                title="Administrar personal en Ajustes"
               >
                 Gestionar
               </button>
@@ -889,7 +915,11 @@ export default function Dashboard() {
                         <p className="text-[11px] text-on-surface-variant mt-0.5">{tech.role}</p>
                       </div>
                     </div>
-                    <button className="text-outline hover:text-primary transition-colors">
+                    <button 
+                      onClick={() => setPage('settings')}
+                      className="text-outline hover:text-primary transition-colors cursor-pointer"
+                      title="Editar en Ajustes"
+                    >
                       <span className="material-symbols-outlined text-[18px]">edit</span>
                     </button>
                   </div>
@@ -903,8 +933,8 @@ export default function Dashboard() {
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-[16px] font-bold text-on-surface">Tareas Pendientes</h3>
               <button 
-                onClick={() => alert('Ver todas las tareas')} 
-                className="text-secondary text-[12px] font-semibold hover:underline"
+                onClick={() => setIsTasksModalOpen(true)} 
+                className="text-secondary text-[12px] font-semibold hover:underline cursor-pointer"
               >
                 Ver Todas
               </button>
@@ -917,8 +947,8 @@ export default function Dashboard() {
               </div>
             ) : (
               <div className="space-y-4">
-                {urgentTasks.map((task, idx) => (
-                  <div key={idx} className="flex items-start gap-3 group cursor-pointer">
+                {urgentTasks.slice(0, 5).map((task, idx) => (
+                  <div key={idx} className="flex items-start gap-3 group cursor-pointer" onClick={() => setIsTasksModalOpen(true)}>
                     <div className={`text-[11px] font-semibold pt-0.5 whitespace-nowrap min-w-[70px] ${task.urgent ? 'text-error' : 'text-on-surface-variant'}`}>
                       {task.date}
                     </div>
@@ -936,10 +966,7 @@ export default function Dashboard() {
             )}
 
             <button 
-              onClick={() => {
-                const desc = prompt('Nueva tarea:');
-                if (desc) alert('Tarea guardada');
-              }}
+              onClick={() => setIsNewTaskModalOpen(true)}
               className="mt-6 pt-4 border-t border-outline-variant/20 flex items-center justify-between w-full group cursor-pointer text-left"
             >
               <span className="text-on-surface-variant text-[13px] font-semibold group-hover:text-primary transition-colors">Nueva Tarea</span>
@@ -949,6 +976,137 @@ export default function Dashboard() {
           
         </div>
       </div>
+
+      {/* Modal: View All Tasks */}
+      {isTasksModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-surface-container-lowest rounded-3xl p-6 w-full max-w-lg shadow-2xl border border-outline-variant/30 text-left">
+            <div className="flex items-center justify-between pb-3 mb-4 border-b border-outline-variant/20">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-primary text-[22px]">checklist</span>
+                <h3 className="font-bold text-base text-on-surface">Todas las Tareas Pendientes ({urgentTasks.length})</h3>
+              </div>
+              <button 
+                onClick={() => setIsTasksModalOpen(false)}
+                className="text-slate-400 hover:text-slate-600 cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[20px]">close</span>
+              </button>
+            </div>
+
+            <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
+              {urgentTasks.map((task, idx) => (
+                <div key={idx} className="p-3 bg-surface-container-low rounded-xl flex items-start gap-3 border border-outline-variant/15">
+                  <div className="mt-0.5">
+                    {task.urgent ? (
+                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-700">URGENTE</span>
+                    ) : (
+                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-200 text-slate-700">NORMAL</span>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-bold text-on-surface leading-tight">{task.desc}</p>
+                    <p className="text-[10px] text-slate-400 mt-1">{task.date}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-4 pt-3 border-t border-outline-variant/20 flex justify-between items-center">
+              <button
+                onClick={() => {
+                  setIsTasksModalOpen(false);
+                  setIsNewTaskModalOpen(true);
+                }}
+                className="px-4 py-2 bg-primary text-white rounded-xl text-xs font-bold shadow-sm flex items-center gap-1.5 cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[16px]">add</span>
+                <span>+ Agregar Tarea</span>
+              </button>
+              <button
+                onClick={() => setIsTasksModalOpen(false)}
+                className="px-4 py-2 bg-surface-container text-slate-600 rounded-xl text-xs font-bold cursor-pointer hover:bg-surface-container-high"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Add New Task */}
+      {isNewTaskModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-surface-container-lowest rounded-3xl p-6 w-full max-w-md shadow-2xl border border-outline-variant/30 text-left">
+            <div className="flex items-center justify-between pb-3 mb-4 border-b border-outline-variant/20">
+              <h3 className="font-bold text-base text-on-surface">Registrar Nueva Tarea</h3>
+              <button 
+                onClick={() => setIsNewTaskModalOpen(false)}
+                className="text-slate-400 hover:text-slate-600 cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[20px]">close</span>
+              </button>
+            </div>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (!newTaskDesc.trim()) return;
+                addUrgentTask({
+                  desc: newTaskDesc.trim(),
+                  urgent: newTaskIsUrgent,
+                  date: 'Hoy, ' + new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
+                });
+                setNewTaskDesc('');
+                setNewTaskIsUrgent(false);
+                setIsNewTaskModalOpen(false);
+              }}
+              className="space-y-4"
+            >
+              <div>
+                <label className="block text-xs font-bold text-slate-500 mb-1.5">Descripción de la Tarea *</label>
+                <textarea
+                  required
+                  rows={3}
+                  placeholder="ej. Reemplazo de rodillos de arrastre en impresora de Cajas..."
+                  value={newTaskDesc}
+                  onChange={(e) => setNewTaskDesc(e.target.value)}
+                  className="w-full px-3 py-2 bg-surface-container-low border border-outline-variant/30 rounded-xl text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
+                />
+              </div>
+
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="taskUrgent"
+                  checked={newTaskIsUrgent}
+                  onChange={(e) => setNewTaskIsUrgent(e.target.checked)}
+                  className="w-4 h-4 text-primary rounded cursor-pointer"
+                />
+                <label htmlFor="taskUrgent" className="text-xs font-bold text-slate-700 cursor-pointer">
+                  Marcar como prioridad URGENTE
+                </label>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-outline-variant/20">
+                <button
+                  type="button"
+                  onClick={() => setIsNewTaskModalOpen(false)}
+                  className="px-4 py-2 bg-surface-container text-slate-600 rounded-xl text-xs font-bold cursor-pointer hover:bg-surface-container-high"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 bg-primary text-white rounded-xl text-xs font-bold shadow-sm cursor-pointer hover:bg-primary/90"
+                >
+                  Guardar Tarea
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

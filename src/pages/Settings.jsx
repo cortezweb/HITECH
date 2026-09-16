@@ -68,6 +68,48 @@ export default function Settings() {
   });
   const [userErrors, setUserErrors] = useState({});
 
+  // Edit User modal state
+  const [isEditUserModalOpen, setIsEditUserModalOpen] = useState(false);
+  const [editUserForm, setEditUserForm] = useState({
+    id: '',
+    name: '',
+    email: '',
+    role: 'cajero',
+    password: '',
+    avatar: ''
+  });
+
+  const handleOpenEditUser = (user) => {
+    setEditUserForm({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      password: '',
+      avatar: user.avatar || ''
+    });
+    setIsEditUserModalOpen(true);
+  };
+
+  const handleSaveEditUser = async (e) => {
+    e.preventDefault();
+    if (!editUserForm.name.trim() || !editUserForm.email.trim()) {
+      alert('Nombre y correo son obligatorios.');
+      return;
+    }
+    const updatePayload = {
+      name: editUserForm.name.trim(),
+      email: editUserForm.email.trim(),
+      role: editUserForm.role,
+      avatar: editUserForm.avatar
+    };
+    if (editUserForm.password && editUserForm.password.trim().length >= 6) {
+      updatePayload.password = editUserForm.password.trim();
+    }
+    await updateUser(editUserForm.id, updatePayload);
+    setIsEditUserModalOpen(false);
+  };
+
   // Shop Info Form state
   const [shopForm, setShopForm] = useState({ ...shopInfo });
   const [shopSaveSuccess, setShopSaveSuccess] = useState(false);
@@ -330,21 +372,23 @@ export default function Settings() {
                               ? 'bg-primary-fixed text-primary' 
                               : usr.role === 'tecnico' 
                                 ? 'bg-secondary-fixed text-secondary' 
-                                : 'bg-tertiary-fixed text-tertiary'
+                                : usr.role === 'cliente_outsourcing'
+                                  ? 'bg-amber-100 text-amber-800'
+                                  : 'bg-tertiary-fixed text-tertiary'
                           }`}>
-                            {usr.role}
+                            {usr.role === 'cliente_outsourcing' ? 'Cliente Outsourcing' : usr.role}
                           </span>
-                          {usr.role !== 'admin' && (
+                          {usr.role !== 'admin' && usr.role !== 'cliente_outsourcing' && (
                             <span className="text-[10px] text-slate-500 font-bold block mt-1">
                               Tasa: {getUserCommissions(usr).rate}
                             </span>
                           )}
                         </td>
                         <td className="py-3.5 px-4 text-right font-semibold text-slate-700">
-                          {usr.role === 'admin' ? '-' : `$${getUserCommissions(usr).volume.toFixed(2)}`}
+                          {usr.role === 'admin' || usr.role === 'cliente_outsourcing' ? '-' : `$${getUserCommissions(usr).volume.toFixed(2)}`}
                         </td>
                         <td className="py-3.5 px-4 text-right font-black text-primary text-[13px]">
-                          {usr.role === 'admin' ? '-' : `$${getUserCommissions(usr).commission.toFixed(2)}`}
+                          {usr.role === 'admin' || usr.role === 'cliente_outsourcing' ? '-' : `$${getUserCommissions(usr).commission.toFixed(2)}`}
                         </td>
                         <td className="py-3.5 px-4">
                           <span className={`inline-flex items-center gap-1 font-bold text-[11px] ${
@@ -356,11 +400,19 @@ export default function Settings() {
                             <span>{usr.status === 'active' ? 'Activo' : 'Inhabilitado'}</span>
                           </span>
                         </td>
-                        <td className="py-3.5 px-4 text-right space-x-2">
+                        <td className="py-3.5 px-4 text-right space-x-1.5 whitespace-nowrap">
+                          <button
+                            onClick={() => handleOpenEditUser(usr)}
+                            className="px-2 py-1 rounded-lg text-[10px] font-bold border border-outline-variant/30 text-primary hover:bg-primary/10 transition-colors cursor-pointer inline-flex items-center gap-1"
+                            title="Modificar usuario"
+                          >
+                            <span className="material-symbols-outlined text-[13px]">edit</span>
+                            <span>Editar</span>
+                          </button>
                           <button
                             onClick={() => handleToggleUserStatus(usr)}
                             disabled={usr.id === 'usr-1'}
-                            className={`px-2.5 py-1 rounded-lg text-[10px] font-bold border transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
+                            className={`px-2 py-1 rounded-lg text-[10px] font-bold border transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
                               usr.status === 'active' 
                                 ? 'border-error/20 bg-error/5 text-error hover:bg-error hover:text-white' 
                                 : 'border-emerald-600/20 bg-emerald-500/5 text-emerald-600 hover:bg-emerald-500 hover:text-white'
@@ -371,10 +423,10 @@ export default function Settings() {
                           <button
                             onClick={() => handleDeleteUser(usr.id, usr.name)}
                             disabled={usr.id === 'usr-1'}
-                            className="px-2 py-1 rounded-lg text-[10px] font-bold text-on-surface-variant hover:text-error transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                            className="px-1.5 py-1 rounded-lg text-[10px] font-bold text-on-surface-variant hover:text-error transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                             title="Eliminar usuario"
                           >
-                            <span className="material-symbols-outlined text-[16px]">delete</span>
+                            <span className="material-symbols-outlined text-[15px]">delete</span>
                           </button>
                         </td>
                       </tr>
@@ -437,6 +489,7 @@ export default function Settings() {
                   >
                     <option value="cajero">Cajero (Ventas y Cobros)</option>
                     <option value="tecnico">Técnico (Diagnóstico y Reparaciones)</option>
+                    <option value="cliente_outsourcing">Cliente Outsourcing (Flota de Impresoras)</option>
                     <option value="admin">Administrador (Control Total)</option>
                   </select>
                 </div>
@@ -473,11 +526,13 @@ export default function Settings() {
                     <th className="py-3 px-4 text-center">Administrador</th>
                     <th className="py-3 px-4 text-center">Cajero</th>
                     <th className="py-3 px-4 text-center">Técnico</th>
+                    <th className="py-3 px-4 text-center">Cliente Outsourcing</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-outline-variant/10 text-on-surface">
                   {[
                     { id: 'dashboard', label: 'Dashboard General (Inicio)', desc: 'Resumen financiero, métricas de órdenes y KPI comerciales' },
+                    { id: 'outsourcing', label: 'Outsourcing y Flota de Impresoras', desc: 'Gestión corporativa de clientes, contratos, agencias, toners y máquinas' },
                     { id: 'service_registry', label: 'Soporte Técnico (Órdenes)', desc: 'Registro de fallas, diagnósticos y control de estado de equipos' },
                     { id: 'pos', label: 'Terminal POS (Punto de Venta)', desc: 'Carrito de compras, cobros (efectivo/tarjetas/QR) e impresión de recibos' },
                     { id: 'inventory', label: 'Inventario de Repuestos/Equipos', desc: 'Registro de stock, precios y categorías de productos' },
@@ -489,7 +544,7 @@ export default function Settings() {
                         <p className="font-bold text-on-surface text-[13px]">{window.label}</p>
                         <p className="text-[11px] text-on-surface-variant mt-0.5">{window.desc}</p>
                       </td>
-                      {['admin', 'cajero', 'tecnico'].map((role) => {
+                      {['admin', 'cajero', 'tecnico', 'cliente_outsourcing'].map((role) => {
                         const hasAccess = (rolePermissions[role] || []).includes(window.id);
                         return (
                           <td key={role} className="py-4 px-4 text-center">
@@ -766,6 +821,113 @@ export default function Settings() {
                   </label>
                 </div>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal: Modificar Usuario */}
+        {isEditUserModalOpen && (
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+            <div className="bg-surface border border-outline-variant/30 rounded-3xl p-6 max-w-md w-full shadow-2xl animate-fade-in text-left">
+              <div className="flex items-center justify-between pb-4 mb-4 border-b border-outline-variant/10">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-10 h-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
+                    <span className="material-symbols-outlined text-[22px]">manage_accounts</span>
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-[16px] text-on-surface">Modificar Personal</h3>
+                    <p className="text-[12px] text-on-surface-variant">Actualizar credenciales y permisos</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsEditUserModalOpen(false)}
+                  className="p-1.5 hover:bg-surface-container rounded-full text-on-surface-variant transition-colors cursor-pointer"
+                >
+                  <span className="material-symbols-outlined text-[20px]">close</span>
+                </button>
+              </div>
+
+              <form onSubmit={handleSaveEditUser} className="space-y-4">
+                <div>
+                  <label className="block text-[11px] font-bold text-on-surface-variant mb-1">Nombre Completo *</label>
+                  <input
+                    type="text"
+                    required
+                    value={editUserForm.name}
+                    onChange={(e) => setEditUserForm({ ...editUserForm, name: e.target.value })}
+                    className="w-full px-3.5 py-2.5 bg-surface-container-low border border-outline-variant/30 rounded-xl text-[13px] text-on-surface focus:outline-none focus:border-primary"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-on-surface-variant mb-1">Correo Electrónico *</label>
+                  <input
+                    type="email"
+                    required
+                    value={editUserForm.email}
+                    onChange={(e) => setEditUserForm({ ...editUserForm, email: e.target.value })}
+                    className="w-full px-3.5 py-2.5 bg-surface-container-low border border-outline-variant/30 rounded-xl text-[13px] text-on-surface focus:outline-none focus:border-primary"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-on-surface-variant mb-1">Rol Asignado *</label>
+                  <select
+                    value={editUserForm.role}
+                    onChange={(e) => setEditUserForm({ ...editUserForm, role: e.target.value })}
+                    className="w-full px-3.5 py-2.5 bg-surface-container-low border border-outline-variant/30 rounded-xl text-[13px] text-on-surface focus:outline-none focus:border-primary font-bold cursor-pointer"
+                  >
+                    <option value="cajero">Cajero (Ventas y Cobros)</option>
+                    <option value="tecnico">Técnico (Diagnóstico y Reparaciones)</option>
+                    <option value="cliente_outsourcing">Cliente Outsourcing (Flota de Impresoras)</option>
+                    <option value="admin">Administrador (Control Total)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-on-surface-variant mb-1">
+                    Nueva Contraseña (Opcional)
+                  </label>
+                  <input
+                    type="password"
+                    value={editUserForm.password}
+                    onChange={(e) => setEditUserForm({ ...editUserForm, password: e.target.value })}
+                    placeholder="Dejar vacío para conservar la contraseña actual"
+                    className="w-full px-3.5 py-2.5 bg-surface-container-low border border-outline-variant/30 rounded-xl text-[13px] text-on-surface focus:outline-none focus:border-primary"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-on-surface-variant mb-1">
+                    URL de Foto de Perfil (Opcional)
+                  </label>
+                  <input
+                    type="text"
+                    value={editUserForm.avatar}
+                    onChange={(e) => setEditUserForm({ ...editUserForm, avatar: e.target.value })}
+                    placeholder="https://images.unsplash.com/..."
+                    className="w-full px-3.5 py-2.5 bg-surface-container-low border border-outline-variant/30 rounded-xl text-[13px] text-on-surface focus:outline-none focus:border-primary"
+                  />
+                </div>
+
+                <div className="flex gap-3 pt-3 border-t border-outline-variant/10">
+                  <button
+                    type="button"
+                    onClick={() => setIsEditUserModalOpen(false)}
+                    className="flex-1 py-2.5 border border-outline-variant/30 rounded-xl text-[13px] font-bold text-on-surface-variant hover:bg-surface-container transition-colors cursor-pointer"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 py-2.5 bg-primary text-on-primary rounded-xl text-[13px] font-bold hover:brightness-105 transition-all shadow-md cursor-pointer flex items-center justify-center gap-1.5"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">save</span>
+                    <span>Guardar Cambios</span>
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         )}

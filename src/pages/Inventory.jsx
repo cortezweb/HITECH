@@ -10,11 +10,56 @@ export default function Inventory() {
     setSubstate,
     products,
     addInventoryProduct,
+    updateInventoryProduct,
+    deleteInventoryProduct,
     selectedInventoryItem,
     setSelectedInventoryItem
   } = useApp();
 
   const [searchQuery, setSearchQuery] = useState('');
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editProductForm, setEditProductForm] = useState({
+    name: '',
+    category: 'Hardware',
+    subCategory: '',
+    stock: '',
+    price: '',
+    cost: '',
+    image: '',
+    desc: ''
+  });
+
+  const handleOpenEdit = (item) => {
+    setEditProductForm({
+      name: item.name,
+      category: item.category,
+      subCategory: item.subCategory || '',
+      stock: item.stock,
+      price: item.price,
+      cost: item.cost || (item.price * 0.6),
+      image: item.image || '',
+      desc: item.desc || ''
+    });
+    setIsEditModalOpen(true);
+  };
+
+  const handleSaveEdit = (e) => {
+    e.preventDefault();
+    if (!editProductForm.name || !editProductForm.price) {
+      alert('Por favor introduce nombre y precio.');
+      return;
+    }
+    updateInventoryProduct(selectedInventoryItem.id, editProductForm);
+    setSelectedInventoryItem(prev => ({
+      ...prev,
+      ...editProductForm,
+      stock: parseInt(editProductForm.stock, 10) || 0,
+      price: parseFloat(editProductForm.price) || 0,
+      cost: parseFloat(editProductForm.cost) || 0
+    }));
+    setIsEditModalOpen(false);
+  };
+
   const [newProduct, setNewProduct] = useState({
     name: '',
     category: 'Hardware',
@@ -531,26 +576,183 @@ export default function Inventory() {
               </div>
             </div>
 
-            <div className="flex gap-3">
+            <div className="flex gap-2">
               <button 
                 onClick={() => {
-                  if (confirm(`¿Eliminar ${selectedInventoryItem.name} de inventario?`)) {
-                    // Alert deletion prototype
-                    alert('Acción no disponible en el prototipo');
+                  if (confirm(`¿Eliminar "${selectedInventoryItem.name}" del catálogo de inventario?`)) {
+                    deleteInventoryProduct(selectedInventoryItem.id);
+                    setSelectedInventoryItem(null);
+                    setSubstate('inventory', 'moderno');
                   }
                 }}
-                className="flex-1 py-3 bg-error-container text-error rounded-xl font-bold text-[13px] hover:bg-error-container/80 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                className="px-3 py-3 bg-error-container text-error rounded-xl font-bold text-[12px] hover:bg-error-container/80 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                title="Eliminar producto"
               >
                 <span className="material-symbols-outlined text-[16px]">delete</span>
                 <span>Eliminar</span>
               </button>
               <button 
-                onClick={() => setSubstate('inventory', 'moderno')}
-                className="flex-1 py-3 bg-primary text-on-primary rounded-xl font-bold text-[13px] hover:brightness-105 transition-all text-center cursor-pointer"
+                onClick={() => handleOpenEdit(selectedInventoryItem)}
+                className="flex-1 py-3 bg-primary/10 text-primary border border-primary/20 rounded-xl font-bold text-[12px] hover:bg-primary/20 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
               >
-                Regresar
+                <span className="material-symbols-outlined text-[16px]">edit</span>
+                <span>Modificar</span>
+              </button>
+              <button 
+                onClick={() => setSubstate('inventory', 'moderno')}
+                className="flex-1 py-3 bg-primary text-on-primary rounded-xl font-bold text-[12px] hover:brightness-105 transition-all text-center cursor-pointer"
+              >
+                Cerrar
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Modificar Producto */}
+      {isEditModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-surface border border-outline-variant/30 rounded-3xl p-6 max-w-lg w-full shadow-2xl animate-fade-in max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-4 mb-4 border-b border-outline-variant/10">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
+                  <span className="material-symbols-outlined text-[20px]">edit_note</span>
+                </div>
+                <div>
+                  <h3 className="font-bold text-[16px] text-on-surface">Modificar Producto</h3>
+                  <p className="text-[12px] text-on-surface-variant">Actualizar información y precios de catálogo</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsEditModalOpen(false)}
+                className="p-1.5 hover:bg-surface-container rounded-full text-on-surface-variant transition-colors cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[20px]">close</span>
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEdit} className="space-y-4">
+              <div>
+                <label className="block text-[12px] font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">
+                  Nombre del Producto *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editProductForm.name}
+                  onChange={(e) => setEditProductForm({ ...editProductForm, name: e.target.value })}
+                  className="w-full px-3.5 py-2.5 bg-surface-container-low border border-outline-variant/30 rounded-xl text-[13px] text-on-surface focus:outline-none focus:border-primary"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[12px] font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">
+                    Categoría
+                  </label>
+                  <select
+                    value={editProductForm.category}
+                    onChange={(e) => setEditProductForm({ ...editProductForm, category: e.target.value })}
+                    className="w-full px-3.5 py-2.5 bg-surface-container-low border border-outline-variant/30 rounded-xl text-[13px] text-on-surface focus:outline-none focus:border-primary"
+                  >
+                    <option value="Hardware">Hardware</option>
+                    <option value="Componentes">Componentes</option>
+                    <option value="Periféricos">Periféricos</option>
+                    <option value="Suministros">Suministros</option>
+                    <option value="Audio">Audio</option>
+                    <option value="Conectividad">Conectividad</option>
+                    <option value="Accesorios">Accesorios</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[12px] font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">
+                    Stock Disponible
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={editProductForm.stock}
+                    onChange={(e) => setEditProductForm({ ...editProductForm, stock: e.target.value })}
+                    className="w-full px-3.5 py-2.5 bg-surface-container-low border border-outline-variant/30 rounded-xl text-[13px] text-on-surface focus:outline-none focus:border-primary"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[12px] font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">
+                    Precio Venta (Bs.) *
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    required
+                    value={editProductForm.price}
+                    onChange={(e) => setEditProductForm({ ...editProductForm, price: e.target.value })}
+                    className="w-full px-3.5 py-2.5 bg-surface-container-low border border-outline-variant/30 rounded-xl text-[13px] text-on-surface focus:outline-none focus:border-primary font-bold text-primary"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[12px] font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">
+                    Costo Compra (Bs.)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={editProductForm.cost}
+                    onChange={(e) => setEditProductForm({ ...editProductForm, cost: e.target.value })}
+                    className="w-full px-3.5 py-2.5 bg-surface-container-low border border-outline-variant/30 rounded-xl text-[13px] text-on-surface focus:outline-none focus:border-primary"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[12px] font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">
+                  URL de Imagen (Opcional)
+                </label>
+                <input
+                  type="text"
+                  placeholder="https://images.unsplash.com/..."
+                  value={editProductForm.image}
+                  onChange={(e) => setEditProductForm({ ...editProductForm, image: e.target.value })}
+                  className="w-full px-3.5 py-2.5 bg-surface-container-low border border-outline-variant/30 rounded-xl text-[13px] text-on-surface focus:outline-none focus:border-primary"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[12px] font-bold text-on-surface-variant uppercase tracking-wider mb-1.5">
+                  Descripción / Especificaciones
+                </label>
+                <textarea
+                  rows="3"
+                  value={editProductForm.desc}
+                  onChange={(e) => setEditProductForm({ ...editProductForm, desc: e.target.value })}
+                  className="w-full px-3.5 py-2.5 bg-surface-container-low border border-outline-variant/30 rounded-xl text-[13px] text-on-surface focus:outline-none focus:border-primary resize-none"
+                />
+              </div>
+
+              <div className="flex gap-3 pt-3 border-t border-outline-variant/10">
+                <button
+                  type="button"
+                  onClick={() => setIsEditModalOpen(false)}
+                  className="flex-1 py-2.5 border border-outline-variant/30 rounded-xl text-[13px] font-bold text-on-surface-variant hover:bg-surface-container transition-colors cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 py-2.5 bg-primary text-on-primary rounded-xl text-[13px] font-bold hover:brightness-105 transition-all shadow-md cursor-pointer flex items-center justify-center gap-1.5"
+                >
+                  <span className="material-symbols-outlined text-[16px]">save</span>
+                  <span>Guardar Cambios</span>
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
