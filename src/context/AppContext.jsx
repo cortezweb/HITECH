@@ -314,6 +314,30 @@ export const initialMockOutsourcingClients = [
     city: 'Bermejo',
     address: 'Av. Barrientos Ortuño N° 340, Bermejo',
     notes: 'Sucursal fronteriza Bermejo.'
+  },
+  {
+    id: 'CLI-BANCO-ECOFUTURO',
+    name: 'Banco Pyme Ecofuturo S.A.',
+    code: 'ECO',
+    contactPerson: 'Lic. Álvaro Quiroga (Subgerente Operativo)',
+    contactPhone: '+591 71834920',
+    contactEmail: 'aquiroga@ecofuturo.com.bo',
+    contractSla: 'SLA Platino 24/7 (Reposición < 2 horas)',
+    city: 'Tarija',
+    address: 'Calle Sucre N° 780 e/ Domingo Paz y Bolívar, Tarija',
+    notes: 'Flota de impresión ecológica corporativa Epson RIPS / Heat-Free (Modelos AM-C400 y WF-M5899) con suministro de bolsas de tinta de alto rendimiento.'
+  },
+  {
+    id: 'CLI-BANCO-PRODEM',
+    name: 'Banco Prodem S.A.',
+    code: 'PRD',
+    contactPerson: 'Lic. Valeria Sandoval (Jefa de Agencia)',
+    contactPhone: '+591 72948102',
+    contactEmail: 'vsandoval@prodem.bo',
+    contractSla: 'SLA Oro Reposición 24h',
+    city: 'Tarija',
+    address: 'Calle General Trigo N° 640 esq. Ingavi, Tarija',
+    notes: 'Parque de impresión láser monocromático de alta velocidad Brother (MFC-L6915DW) con control estricto de tóners TN-3615 y tambores DR-3600.'
   }
 ];
 
@@ -607,6 +631,208 @@ export const initialMockOutsourcingAgencies = [
       }
     ],
     deliveryHistory: []
+  },
+  {
+    id: 'AG-ECO-01',
+    clientId: 'CLI-BANCO-ECOFUTURO',
+    clientName: 'Banco Pyme Ecofuturo S.A.',
+    clientCode: 'ECO',
+    agencyName: 'Agencia Central Tarija - Ecofuturo',
+    city: 'Tarija',
+    address: 'Calle Sucre N° 780 e/ Domingo Paz y Bolívar',
+    lat: -21.5325,
+    lng: -64.7345,
+    contactPerson: 'Lic. Álvaro Quiroga (Subgerente Operativo)',
+    contactPhone: '+591 71834920',
+    contactEmail: 'aquiroga@ecofuturo.com.bo',
+    status: 'optimo',
+    lastReplenished: '12/09/2026',
+    printers: [
+      { model: 'Epson WorkForce Enterprise AM-C400', location: 'Cajas & Atención al Cliente', serial: 'EPS-AMC400-01' },
+      { model: 'Epson WorkForce Pro WF-M5899', location: 'Créditos & Microfinanzas', serial: 'EPS-WFM5899-02' }
+    ],
+    toners: [
+      {
+        id: 'INK-AMC400-K',
+        model: 'Bolsa de Tinta Epson T11A Black',
+        type: 'Bolsa de Tinta',
+        color: 'Negro',
+        yieldPages: '10,000 págs',
+        currentStock: 3,
+        minStock: 2,
+        compatiblePrinter: 'Epson WorkForce Enterprise AM-C400'
+      },
+      {
+        id: 'INK-AMC400-C',
+        model: 'Bolsa de Tinta Epson T11A Cyan',
+        type: 'Bolsa de Tinta',
+        color: 'Cian',
+        yieldPages: '5,000 págs',
+        currentStock: 2,
+        minStock: 1,
+        compatiblePrinter: 'Epson WorkForce Enterprise AM-C400'
+      },
+      {
+        id: 'INK-AMC400-M',
+        model: 'Bolsa de Tinta Epson T11A Magenta',
+        type: 'Bolsa de Tinta',
+        color: 'Magenta',
+        yieldPages: '5,000 págs',
+        currentStock: 2,
+        minStock: 1,
+        compatiblePrinter: 'Epson WorkForce Enterprise AM-C400'
+      },
+      {
+        id: 'INK-AMC400-Y',
+        model: 'Bolsa de Tinta Epson T11A Yellow',
+        type: 'Bolsa de Tinta',
+        color: 'Amarillo',
+        yieldPages: '5,000 págs',
+        currentStock: 2,
+        minStock: 1,
+        compatiblePrinter: 'Epson WorkForce Enterprise AM-C400'
+      },
+      {
+        id: 'INK-WFM5899-K',
+        model: 'Bolsa de Tinta Epson T11U Black',
+        type: 'Bolsa de Tinta',
+        color: 'Negro',
+        yieldPages: '40,000 págs',
+        currentStock: 2,
+        minStock: 1,
+        compatiblePrinter: 'Epson WorkForce Pro WF-M5899'
+      }
+    ],
+    deliveryHistory: [
+      {
+        id: 'REM-2026-112',
+        date: '12/09/2026',
+        technician: 'Ing. Milton Berthy Choque Canaviri',
+        serialNumber: 'SN-T11A-981204',
+        consumableType: 'Bolsa de Tinta',
+        tonersDelivered: [
+          {
+            model: 'Bolsa de Tinta Epson T11A Black',
+            color: 'Negro',
+            compatiblePrinter: 'Epson WorkForce Enterprise AM-C400',
+            quantity: 2,
+            serialNumber: 'SN-T11A-981204',
+            consumableType: 'Bolsa de Tinta'
+          },
+          {
+            model: 'Bolsa de Tinta Epson T11U Black',
+            color: 'Negro',
+            compatiblePrinter: 'Epson WorkForce Pro WF-M5899',
+            quantity: 1,
+            serialNumber: 'SN-T11U-772183',
+            consumableType: 'Bolsa de Tinta'
+          }
+        ],
+        receiver: 'Lic. Álvaro Quiroga',
+        notes: 'Entrega inicial de bolsas de tinta de contingencia para equipos Epson RIPS.'
+      }
+    ],
+    changeHistory: [
+      {
+        id: 'CHG-ECO-01',
+        date: '12/09/2026, 14:15',
+        tonerModel: 'Bolsa de Tinta Epson T11A Black',
+        consumableType: 'Bolsa de Tinta',
+        serialNumber: 'SN-T11A-981204',
+        color: 'Negro',
+        quantity: 1,
+        printerModel: 'Epson WorkForce Enterprise AM-C400',
+        printerSerial: 'EPS-AMC400-01',
+        installedBy: 'Ing. Milton Berthy Choque Canaviri',
+        notes: 'Carga e instalación de bolsa de tinta negra inicial.'
+      }
+    ]
+  },
+  {
+    id: 'AG-PRD-01',
+    clientId: 'CLI-BANCO-PRODEM',
+    clientName: 'Banco Prodem S.A.',
+    clientCode: 'PRD',
+    agencyName: 'Agencia Central Tarija - Prodem',
+    city: 'Tarija',
+    address: 'Calle General Trigo N° 640 esq. Ingavi',
+    lat: -21.5360,
+    lng: -64.7320,
+    contactPerson: 'Lic. Valeria Sandoval (Jefa de Agencia)',
+    contactPhone: '+591 72948102',
+    contactEmail: 'vsandoval@prodem.bo',
+    status: 'optimo',
+    lastReplenished: '14/09/2026',
+    printers: [
+      { model: 'BROTHER MFC-L6915DW', location: 'Cajas & Plataforma Financiera', serial: 'BRO-6915-01' },
+      { model: 'BROTHER MFC-L6915DW', location: 'Atención al Cliente', serial: 'BRO-6915-02' }
+    ],
+    toners: [
+      {
+        id: 'TON-TN3615',
+        model: 'Tóner Brother TN-3615 / TN-3615XXL',
+        type: 'Tóner',
+        color: 'Negro',
+        yieldPages: '18,000 págs',
+        currentStock: 3,
+        minStock: 2,
+        compatiblePrinter: 'BROTHER MFC-L6915DW'
+      },
+      {
+        id: 'DRUM-DR3600',
+        model: 'Unidad de Tambor / Drum Brother DR-3600',
+        type: 'Tambor / Drum',
+        color: 'Monocromático',
+        yieldPages: '75,000 págs',
+        currentStock: 2,
+        minStock: 1,
+        compatiblePrinter: 'BROTHER MFC-L6915DW'
+      }
+    ],
+    deliveryHistory: [
+      {
+        id: 'REM-2026-118',
+        date: '14/09/2026',
+        technician: 'Ing. Milton Berthy Choque Canaviri',
+        serialNumber: 'SN-BR-TN3615-5591',
+        consumableType: 'Tóner',
+        tonersDelivered: [
+          {
+            model: 'Tóner Brother TN-3615 / TN-3615XXL',
+            color: 'Negro',
+            compatiblePrinter: 'BROTHER MFC-L6915DW',
+            quantity: 3,
+            serialNumber: 'SN-BR-TN3615-5591',
+            consumableType: 'Tóner'
+          },
+          {
+            model: 'Unidad de Tambor / Drum Brother DR-3600',
+            color: 'Monocromático',
+            compatiblePrinter: 'BROTHER MFC-L6915DW',
+            quantity: 2,
+            serialNumber: 'SN-BR-DR3600-1120',
+            consumableType: 'Tambor / Drum'
+          }
+        ],
+        receiver: 'Lic. Valeria Sandoval',
+        notes: 'Dotación preventiva de tóners y unidad de tambor para Brother MFC-L6915DW.'
+      }
+    ],
+    changeHistory: [
+      {
+        id: 'CHG-PRD-01',
+        date: '14/09/2026, 16:30',
+        tonerModel: 'Tóner Brother TN-3615 / TN-3615XXL',
+        consumableType: 'Tóner',
+        serialNumber: 'SN-BR-TN3615-5591',
+        color: 'Negro',
+        quantity: 1,
+        printerModel: 'BROTHER MFC-L6915DW (Cajas)',
+        printerSerial: 'BRO-6915-01',
+        installedBy: 'Ing. Milton Berthy Choque Canaviri',
+        notes: 'Instalación y prueba de impresión 50 páginas. Calidad óptima.'
+      }
+    ]
   }
 ];
 
@@ -630,7 +856,13 @@ export const AppProvider = ({ children }) => {
   const [outsourcingClients, setOutsourcingClients] = useState(() => {
     try {
       const saved = localStorage.getItem('sistech_outsourcing_clients');
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        const existingIds = new Set(parsed.map(c => c.id));
+        const missing = initialMockOutsourcingClients.filter(c => !existingIds.has(c.id));
+        if (missing.length > 0) return [...parsed, ...missing];
+        return parsed;
+      }
     } catch (e) {
       console.warn('Error reading outsourcing clients:', e);
     }
@@ -640,7 +872,13 @@ export const AppProvider = ({ children }) => {
   const [outsourcingAgencies, setOutsourcingAgencies] = useState(() => {
     try {
       const saved = localStorage.getItem('sistech_outsourcing_agencies');
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        const existingIds = new Set(parsed.map(a => a.id));
+        const missing = initialMockOutsourcingAgencies.filter(a => !existingIds.has(a.id));
+        if (missing.length > 0) return [...parsed, ...missing];
+        return parsed;
+      }
     } catch (e) {
       console.warn('Error reading outsourcing agencies:', e);
     }
@@ -1429,15 +1667,14 @@ export const AppProvider = ({ children }) => {
     logActivity('Actualizar Ticket', `Se actualizó el ticket ${ticketId} a estado ${newStatus}.`);
   };
 
-  // Outsourcing Agency Methods
-  const addAgencyTonerStock = async (agencyId, tonerId, quantity, technician, notes) => {
+  const addAgencyTonerStock = async (agencyId, tonerId, quantity, technician, notes, extra = {}) => {
     setOutsourcingAgencies(prev => prev.map(agency => {
       if (agency.id !== agencyId) return agency;
 
       const qtyToAdd = parseInt(quantity, 10) || 0;
       let matchedToner = null;
 
-      const updatedToners = agency.toners.map(t => {
+      const updatedToners = (agency.toners || []).map(t => {
         if (t.id === tonerId) {
           matchedToner = t;
           return { ...t, currentStock: t.currentStock + qtyToAdd };
@@ -1446,9 +1683,9 @@ export const AppProvider = ({ children }) => {
       });
 
       // Recalculate status based on new stock levels
-      const totalBackup = updatedToners.reduce((s, t) => s + t.currentStock, 0);
-      const hasZero = updatedToners.some(t => t.currentStock === 0);
-      const hasLow = updatedToners.some(t => t.currentStock <= t.minStock);
+      const totalBackup = updatedToners.reduce((s, t) => s + (t.currentStock || 0), 0);
+      const hasZero = updatedToners.some(t => (t.currentStock || 0) === 0);
+      const hasLow = updatedToners.some(t => (t.currentStock || 0) <= (t.minStock || 2));
       
       let newStatus = 'optimo';
       if (totalBackup === 0 || hasZero) newStatus = 'critico';
@@ -1456,14 +1693,18 @@ export const AppProvider = ({ children }) => {
 
       const deliveryEntry = {
         id: `REM-2026-${Math.floor(100 + Math.random() * 900)}`,
-        date: new Date().toLocaleDateString('es-ES'),
+        date: extra.deliveryDate || new Date().toLocaleDateString('es-ES'),
         technician: technician || 'Ing. Milton Berthy Choque Canaviri',
+        serialNumber: extra.serialNumber || '',
+        consumableType: extra.consumableType || matchedToner?.type || 'Tóner',
         tonersDelivered: [
           {
             model: matchedToner?.model || tonerId,
             color: matchedToner?.color || 'Negro',
             compatiblePrinter: matchedToner?.compatiblePrinter || '',
-            quantity: qtyToAdd
+            quantity: qtyToAdd,
+            serialNumber: extra.serialNumber || '',
+            consumableType: extra.consumableType || matchedToner?.type || 'Tóner'
           }
         ],
         receiver: agency.contactPerson,
@@ -1474,17 +1715,17 @@ export const AppProvider = ({ children }) => {
         ...agency,
         toners: updatedToners,
         status: newStatus,
-        lastReplenished: new Date().toLocaleDateString('es-ES'),
+        lastReplenished: extra.deliveryDate || new Date().toLocaleDateString('es-ES'),
         deliveryHistory: [deliveryEntry, ...(agency.deliveryHistory || [])]
       };
 
       if (isSupabaseConfigured && supabase) {
-        supabase.from('outsourcing_agencies').upsert(updatedAgency).catch(console.warn);
+        supabase.from('outsourcing_agencies').upsert(mapAgencyToDb(updatedAgency)).catch(console.warn);
       }
 
       logActivity(
-        'Entrega de Tóners', 
-        `Se entregaron ${qtyToAdd} un. de tóner ${matchedToner?.model || ''} en ${agency.agencyName} (${agency.clientName}).`
+        'Entrega de Suministros', 
+        `Se entregaron ${qtyToAdd} un. de ${matchedToner?.model || ''} (Serie: ${extra.serialNumber || 'S/N'}) en ${agency.agencyName} (${agency.clientName}).`
       );
 
       return updatedAgency;
@@ -1515,7 +1756,7 @@ export const AppProvider = ({ children }) => {
       return a;
     }));
     if (isSupabaseConfigured && supabase && updatedAgencyObj) {
-      supabase.from('outsourcing_agencies').update(mapAgencyToDb(updatedAgencyObj)).eq('id', agencyId).catch(console.warn);
+      supabase.from('outsourcing_agencies').upsert(mapAgencyToDb(updatedAgencyObj)).catch(console.warn);
     }
     logActivity('Modificar Sucursal', `Se modificaron los datos de la sucursal ${fields.agencyName || agencyId}.`);
     return updatedAgencyObj;
@@ -1620,8 +1861,8 @@ export const AppProvider = ({ children }) => {
     return true;
   };
 
-  // Consume / Install Toner in Printer (deduct from agency backup reserve)
-  const consumeAgencyToner = async (agencyId, tonerId, printerModel, installedBy, notes, qty = 1) => {
+  // Consume / Install Toner/Ink in Printer (deduct from agency backup reserve)
+  const consumeAgencyToner = async (agencyId, tonerId, printerModel, installedBy, notes, qty = 1, extra = {}) => {
     let success = false;
     let errorMsg = '';
 
@@ -1630,7 +1871,7 @@ export const AppProvider = ({ children }) => {
 
       const matchedToner = agency.toners?.find(t => t.id === tonerId);
       if (!matchedToner) {
-        errorMsg = 'Modelo de tóner no encontrado en la agencia.';
+        errorMsg = 'Modelo de insumo no encontrado en la agencia.';
         return agency;
       }
 
@@ -1650,9 +1891,9 @@ export const AppProvider = ({ children }) => {
       });
 
       // Recalculate status
-      const totalBackup = updatedToners.reduce((s, t) => s + t.currentStock, 0);
-      const hasZero = updatedToners.some(t => t.currentStock === 0);
-      const hasLow = updatedToners.some(t => t.currentStock <= t.minStock);
+      const totalBackup = updatedToners.reduce((s, t) => s + (t.currentStock || 0), 0);
+      const hasZero = updatedToners.some(t => (t.currentStock || 0) === 0);
+      const hasLow = updatedToners.some(t => (t.currentStock || 0) <= (t.minStock || 2));
 
       let newStatus = 'optimo';
       if (totalBackup === 0 || hasZero) newStatus = 'critico';
@@ -1660,11 +1901,14 @@ export const AppProvider = ({ children }) => {
 
       const changeRecord = {
         id: `CHG-${Date.now()}`,
-        date: new Date().toLocaleDateString('es-ES') + ', ' + new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
+        date: extra.installDate || (new Date().toLocaleDateString('es-ES') + ', ' + new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })),
         tonerModel: matchedToner.model,
-        color: matchedToner.color,
+        consumableType: extra.consumableType || matchedToner.type || 'Tóner',
+        serialNumber: extra.serialNumber || '',
+        color: matchedToner.color || 'Negro',
         quantity: qtyToConsume,
         printerModel: printerModel || matchedToner.compatiblePrinter,
+        printerSerial: extra.printerSerial || '',
         installedBy: installedBy || 'Personal de Agencia',
         notes: notes || 'Sustitución de cartucho agotado en impresora.'
       };
@@ -1677,12 +1921,12 @@ export const AppProvider = ({ children }) => {
       };
 
       if (isSupabaseConfigured && supabase) {
-        supabase.from('outsourcing_agencies').upsert(updatedAgency).catch(console.warn);
+        supabase.from('outsourcing_agencies').upsert(mapAgencyToDb(updatedAgency)).catch(console.warn);
       }
 
       logActivity(
-        'Cambio de Tóner',
-        `Se instaló ${qtyToConsume} un. de ${matchedToner.model} en ${printerModel || agency.agencyName} (${agency.clientName}). Reserva restante: ${matchedToner.currentStock - qtyToConsume} un.`
+        'Instalación en Impresora',
+        `Se instaló ${qtyToConsume} un. de ${matchedToner.model} (Serie: ${extra.serialNumber || 'S/N'}) en ${printerModel || agency.agencyName} (${agency.clientName}). Reserva restante: ${matchedToner.currentStock - qtyToConsume} un.`
       );
 
       return updatedAgency;

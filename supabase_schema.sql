@@ -136,6 +136,7 @@ CREATE TABLE IF NOT EXISTS outsourcing_agencies (
     printers JSONB DEFAULT '[]'::jsonb,
     toners JSONB DEFAULT '[]'::jsonb,
     deliveryHistory JSONB DEFAULT '[]'::jsonb,
+    changeHistory JSONB DEFAULT '[]'::jsonb,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );

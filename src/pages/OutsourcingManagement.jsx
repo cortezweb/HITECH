@@ -144,6 +144,9 @@ export default function OutsourcingManagement() {
     tonerId: '',
     quantity: 2,
     technician: 'Ing. Milton Berthy Choque Canaviri',
+    serialNumber: '',
+    deliveryDate: new Date().toISOString().split('T')[0],
+    consumableType: 'Tóner',
     notes: 'Entrega regular según contrato de reposición preventiva.'
   });
 
@@ -151,14 +154,54 @@ export default function OutsourcingManagement() {
   const [installForm, setInstallForm] = useState({
     tonerId: '',
     printerModel: '',
+    printerSerial: '',
+    serialNumber: '',
+    consumableType: 'Tóner',
+    installDate: new Date().toISOString().split('T')[0],
     installedBy: '',
     notes: 'Sustitución de cartucho agotado en impresora.',
     quantity: 1
   });
 
+  const handleOpenDeliveryModal = (t = null) => {
+    const defaultToner = t || selectedAgency?.toners?.[0];
+    setDeliveryForm({
+      tonerId: defaultToner ? defaultToner.id : '',
+      quantity: 2,
+      technician: currentUser?.name && currentUser.role === 'tecnico' ? currentUser.name : 'Ing. Milton Berthy Choque Canaviri',
+      serialNumber: '',
+      deliveryDate: new Date().toISOString().split('T')[0],
+      consumableType: defaultToner?.type || 'Tóner',
+      notes: 'Entrega regular según contrato de reposición preventiva.'
+    });
+    setIsDeliveryModalOpen(true);
+  };
+
+  const handleOpenInstallModal = (t = null) => {
+    const defaultToner = t || selectedAgency?.toners?.[0];
+    const defaultPrinter = selectedAgency?.printers?.find(p => p.model === defaultToner?.compatiblePrinter) || selectedAgency?.printers?.[0];
+    setInstallForm({
+      tonerId: defaultToner ? defaultToner.id : '',
+      printerModel: defaultPrinter ? `${defaultPrinter.model} (${defaultPrinter.location})` : (defaultToner?.compatiblePrinter || ''),
+      printerSerial: defaultPrinter?.serial || '',
+      serialNumber: '',
+      consumableType: defaultToner?.type || 'Tóner',
+      installDate: new Date().toISOString().split('T')[0],
+      installedBy: currentUser?.name || 'Personal de Agencia',
+      notes: 'Sustitución de cartucho agotado en impresora.',
+      quantity: 1
+    });
+    setIsInstallModalOpen(true);
+  };
+
   const handleInstallToner = (e) => {
     e.preventDefault();
     if (!selectedAgency || !installForm.tonerId) return;
+
+    const matchedToner = selectedAgency.toners?.find(t => t.id === installForm.tonerId);
+    const itemConsumableType = installForm.consumableType || matchedToner?.type || 'Tóner';
+    const itemSerial = installForm.serialNumber?.trim() || `SN-${Math.floor(100000 + Math.random() * 900000)}`;
+    const itemDate = installForm.installDate || new Date().toISOString().split('T')[0];
 
     const success = consumeAgencyToner(
       selectedAgency.id,
@@ -166,7 +209,13 @@ export default function OutsourcingManagement() {
       installForm.printerModel,
       installForm.installedBy || currentUser?.name || 'Personal de Agencia',
       installForm.notes,
-      parseInt(installForm.quantity, 10) || 1
+      parseInt(installForm.quantity, 10) || 1,
+      {
+        serialNumber: itemSerial,
+        installDate: itemDate,
+        consumableType: itemConsumableType,
+        printerSerial: installForm.printerSerial || ''
+      }
     );
 
     if (success) {
@@ -188,6 +237,8 @@ export default function OutsourcingManagement() {
     contactPhone: '+591 ',
     printerModel: 'HP LaserJet Enterprise M507dn',
     tonerModel: 'HP 89A (CF289A)',
+    consumableType: 'Tóner',
+    color: 'Negro',
     initialStock: 2,
     minStock: 2
   });
@@ -201,26 +252,39 @@ export default function OutsourcingManagement() {
     if (!matchedToner) return;
 
     const qty = parseInt(deliveryForm.quantity, 10) || 1;
+    const itemConsumableType = deliveryForm.consumableType || matchedToner.type || 'Tóner';
+    const itemSerial = deliveryForm.serialNumber?.trim() || `SN-${Math.floor(100000 + Math.random() * 900000)}`;
+    const itemDate = deliveryForm.deliveryDate || new Date().toISOString().split('T')[0];
+
     addAgencyTonerStock(
       selectedAgency.id,
       deliveryForm.tonerId,
       qty,
       deliveryForm.technician,
-      deliveryForm.notes
+      deliveryForm.notes,
+      {
+        serialNumber: itemSerial,
+        deliveryDate: itemDate,
+        consumableType: itemConsumableType
+      }
     );
 
     // Prepare receipt
     setCurrentReceiptData({
       id: `REM-2026-${Math.floor(100 + Math.random() * 900)}`,
-      date: new Date().toLocaleDateString('es-ES'),
+      date: itemDate,
       technician: deliveryForm.technician,
+      serialNumber: itemSerial,
+      consumableType: itemConsumableType,
       notes: deliveryForm.notes,
       tonersDelivered: [
         {
           model: matchedToner.model,
           color: matchedToner.color,
           compatiblePrinter: matchedToner.compatiblePrinter,
-          quantity: qty
+          quantity: qty,
+          serialNumber: itemSerial,
+          consumableType: itemConsumableType
         }
       ]
     });
@@ -254,14 +318,15 @@ export default function OutsourcingManagement() {
       status: parseInt(newAgencyForm.initialStock, 10) === 0 ? 'critico' : parseInt(newAgencyForm.initialStock, 10) <= 2 ? 'alerta' : 'optimo',
       lastReplenished: new Date().toLocaleDateString('es-ES'),
       printers: [
-        { model: newAgencyForm.printerModel, location: 'Área de Cajas', serial: `EQ-${Math.floor(1000 + Math.random() * 9000)}` }
+        { model: newAgencyForm.printerModel, location: 'Área Principal / Cajas', serial: `EQ-${Math.floor(1000 + Math.random() * 9000)}` }
       ],
       toners: [
         {
           id: `TON-${Math.floor(100 + Math.random() * 900)}`,
           model: newAgencyForm.tonerModel,
-          color: 'Negro',
-          yieldPages: '5,000 págs',
+          type: newAgencyForm.consumableType || 'Tóner',
+          color: newAgencyForm.color || 'Negro',
+          yieldPages: '10,000 págs',
           currentStock: parseInt(newAgencyForm.initialStock, 10) || 0,
           minStock: parseInt(newAgencyForm.minStock, 10) || 2,
           compatiblePrinter: newAgencyForm.printerModel
@@ -345,12 +410,65 @@ export default function OutsourcingManagement() {
     setIsEditAgencyModalOpen(true);
   };
 
+  const handleAddConsumableToEditAgency = (preset = null) => {
+    const defaultConsumable = preset || {
+      id: `TON-${Math.floor(100 + Math.random() * 900)}`,
+      model: 'Bolsa de Tinta Epson T11A Black',
+      type: 'Bolsa de Tinta',
+      color: 'Negro',
+      yieldPages: '10,000 págs',
+      currentStock: 2,
+      minStock: 1,
+      compatiblePrinter: 'Epson WorkForce Enterprise AM-C400'
+    };
+    setEditAgencyForm(prev => ({
+      ...prev,
+      toners: [...(prev.toners || []), { ...defaultConsumable, id: `TON-${Date.now()}-${Math.floor(Math.random() * 100)}` }]
+    }));
+  };
+
+  const handleRemoveConsumableFromEditAgency = (index) => {
+    setEditAgencyForm(prev => ({
+      ...prev,
+      toners: (prev.toners || []).filter((_, i) => i !== index)
+    }));
+  };
+
+  const handleAddPrinterToEditAgency = () => {
+    const newPrinter = {
+      model: 'Epson WorkForce Enterprise AM-C400',
+      location: 'Cajas / Mostrador',
+      serial: `EQ-${Math.floor(1000 + Math.random() * 9000)}`
+    };
+    setEditAgencyForm(prev => ({
+      ...prev,
+      printers: [...(prev.printers || []), newPrinter]
+    }));
+  };
+
+  const handleRemovePrinterFromEditAgency = (index) => {
+    setEditAgencyForm(prev => ({
+      ...prev,
+      printers: (prev.printers || []).filter((_, i) => i !== index)
+    }));
+  };
+
   const handleSaveEditAgency = (e) => {
     e.preventDefault();
     if (!editAgencyForm || !editAgencyForm.agencyName || !editAgencyForm.address) return;
     const client = clientOptions.find(c => c.id === editAgencyForm.clientId);
+    
+    // Recalculate status based on current stock of toners
+    const totalBackup = (editAgencyForm.toners || []).reduce((s, t) => s + (parseInt(t.currentStock, 10) || 0), 0);
+    const hasZero = (editAgencyForm.toners || []).some(t => (parseInt(t.currentStock, 10) || 0) === 0);
+    const hasLow = (editAgencyForm.toners || []).some(t => (parseInt(t.currentStock, 10) || 0) <= (parseInt(t.minStock, 10) || 2));
+    let newStatus = 'optimo';
+    if (totalBackup === 0 || hasZero) newStatus = 'critico';
+    else if (totalBackup <= 2 || hasLow) newStatus = 'alerta';
+
     updateAgency(editAgencyForm.id, {
       ...editAgencyForm,
+      status: newStatus,
       clientName: client?.name || editAgencyForm.clientName,
       clientCode: client?.code || editAgencyForm.clientCode,
       lat: parseFloat(editAgencyForm.lat) || -21.5332,
@@ -830,33 +948,17 @@ export default function OutsourcingManagement() {
               </button>
 
               <button
-                onClick={() => {
-                  setDeliveryForm(prev => ({
-                    ...prev,
-                    tonerId: selectedAgency.toners?.[0]?.id || ''
-                  }));
-                  setIsDeliveryModalOpen(true);
-                }}
+                onClick={() => handleOpenDeliveryModal()}
                 className="px-4 py-2.5 bg-primary hover:bg-primary/90 text-white rounded-xl text-xs font-bold shadow-md shadow-primary/20 flex items-center gap-2 transition-all cursor-pointer"
               >
                 <span className="material-symbols-outlined text-[18px]">local_shipping</span>
-                <span>+ Entregar Tóners</span>
+                <span>+ Entregar Suministros</span>
               </button>
 
               <button
-                onClick={() => {
-                  const firstAvailable = selectedAgency.toners?.find(t => t.currentStock > 0) || selectedAgency.toners?.[0];
-                  setInstallForm({
-                    tonerId: firstAvailable?.id || '',
-                    printerModel: selectedAgency.printers?.[0]?.model || firstAvailable?.compatiblePrinter || '',
-                    installedBy: currentUser?.name || 'Personal de Agencia',
-                    notes: 'Sustitución de cartucho agotado en impresora.',
-                    quantity: 1
-                  });
-                  setIsInstallModalOpen(true);
-                }}
+                onClick={() => handleOpenInstallModal()}
                 className="px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold shadow-md shadow-amber-500/20 flex items-center gap-2 transition-all cursor-pointer"
-                title="Registrar que se sacó un cartucho del armario de reserva y se colocó en la impresora"
+                title="Registrar que se sacó un cartucho o bolsa de tinta del armario de contingencia y se colocó en la impresora"
               >
                 <span className="material-symbols-outlined text-[18px]">swap_vert</span>
                 <span>- Instalar en Impresora</span>
@@ -914,13 +1016,14 @@ export default function OutsourcingManagement() {
                 <table className="w-full text-xs text-left">
                   <thead>
                     <tr className="border-b border-outline-variant/30 text-slate-400 font-bold uppercase text-[10px]">
-                      <th className="py-2.5 px-3">Modelo de Tóner</th>
+                      <th className="py-2.5 px-3">Modelo de Insumo</th>
+                      <th className="py-2.5 px-3">Tipo</th>
                       <th className="py-2.5 px-3">Color</th>
                       <th className="py-2.5 px-3">Impresora Compatible</th>
                       <th className="py-2.5 px-3 text-center">Rendimiento</th>
                       <th className="py-2.5 px-3 text-center">Stock Reserva</th>
                       <th className="py-2.5 px-3 text-center">Estado</th>
-                      <th className="py-2.5 px-3 text-center">Acción</th>
+                      <th className="py-2.5 px-3 text-center">Acciones</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-outline-variant/15">
@@ -931,18 +1034,23 @@ export default function OutsourcingManagement() {
                       return (
                         <tr key={t.id} className="hover:bg-surface-container-low transition-colors">
                           <td className="py-3 px-3 font-bold text-on-surface">
-                            {t.model}
+                            <span>{t.model}</span>
+                          </td>
+                          <td className="py-3 px-3">
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-primary/10 text-primary">
+                              {t.type || 'Tóner'}
+                            </span>
                           </td>
                           <td className="py-3 px-3 text-slate-600">
                             <span className="inline-flex items-center gap-1.5">
                               <span className={`w-2.5 h-2.5 rounded-full ${
-                                t.color === 'Negro' ? 'bg-slate-900' : t.color === 'Cian' ? 'bg-cyan-500' : t.color === 'Magenta' ? 'bg-pink-500' : 'bg-amber-400'
+                                t.color === 'Negro' ? 'bg-slate-900' : t.color === 'Cian' ? 'bg-cyan-500' : t.color === 'Magenta' ? 'bg-pink-500' : t.color === 'Amarillo' ? 'bg-amber-400' : 'bg-slate-400'
                               }`} />
-                              {t.color}
+                              {t.color || 'Negro'}
                             </span>
                           </td>
                           <td className="py-3 px-3 text-slate-600">
-                            {t.compatiblePrinter}
+                            {t.compatiblePrinter || 'Flota Asignada'}
                           </td>
                           <td className="py-3 px-3 text-center text-slate-500 font-mono">
                             {t.yieldPages || 'N/A'}
@@ -975,28 +1083,29 @@ export default function OutsourcingManagement() {
                             )}
                           </td>
                           <td className="py-3 px-3 text-center">
-                            <button
-                              disabled={isZero}
-                              onClick={() => {
-                                setInstallForm({
-                                  tonerId: t.id,
-                                  printerModel: t.compatiblePrinter || selectedAgency.printers?.[0]?.model || '',
-                                  installedBy: currentUser?.name || 'Personal de Agencia',
-                                  notes: 'Sustitución de cartucho agotado en impresora.',
-                                  quantity: 1
-                                });
-                                setIsInstallModalOpen(true);
-                              }}
-                              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1 mx-auto ${
-                                isZero 
-                                  ? 'bg-slate-100 text-slate-400 cursor-not-allowed' 
-                                  : 'bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200/60 cursor-pointer shadow-sm active:scale-95'
-                              }`}
-                              title={isZero ? 'Sin stock para instalar' : 'Instalar cartucho en la impresora (descuenta 1 del stock)'}
-                            >
-                              <span className="material-symbols-outlined text-[14px]">swap_vert</span>
-                              <span>Instalar</span>
-                            </button>
+                            <div className="flex items-center justify-center gap-1.5">
+                              <button
+                                disabled={isZero}
+                                onClick={() => handleOpenInstallModal(t)}
+                                className={`px-2 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${
+                                  isZero 
+                                    ? 'bg-slate-100 text-slate-400 cursor-not-allowed' 
+                                    : 'bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200/60 cursor-pointer shadow-sm active:scale-95'
+                                }`}
+                                title={isZero ? 'Sin stock para instalar' : 'Instalar insumo en impresora'}
+                              >
+                                <span className="material-symbols-outlined text-[14px]">swap_vert</span>
+                                <span>Instalar</span>
+                              </button>
+                              <button
+                                onClick={() => handleOpenDeliveryModal(t)}
+                                className="px-2 py-1 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 rounded-lg text-xs font-bold transition-all flex items-center gap-1 cursor-pointer active:scale-95"
+                                title="Registrar entrega de este modelo"
+                              >
+                                <span className="material-symbols-outlined text-[14px]">local_shipping</span>
+                                <span>+ Entregar</span>
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       );
@@ -1024,20 +1133,38 @@ export default function OutsourcingManagement() {
                   <div className="space-y-2">
                     {selectedAgency.deliveryHistory.map((d, idx) => (
                       <div key={idx} className="p-3 bg-surface-container-low rounded-xl border border-outline-variant/15 flex items-center justify-between text-xs">
-                        <div>
-                          <span className="font-mono font-bold text-slate-700 mr-2">{d.id}</span>
-                          <span className="text-slate-500 mr-3">{d.date}</span>
-                          <span className="font-medium text-slate-800">
-                            {d.tonersDelivered?.map(t => `${t.quantity} un. ${t.model}`).join(', ')}
-                          </span>
-                          <p className="text-[10px] text-slate-400 mt-0.5">
+                        <div className="space-y-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="font-mono font-bold text-slate-800">{d.id}</span>
+                            <span className="text-slate-400">•</span>
+                            <span className="text-slate-600 font-medium">{d.date}</span>
+                            {d.consumableType && (
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-200 text-slate-700">
+                                {d.consumableType}
+                              </span>
+                            )}
+                            {d.serialNumber && (
+                              <span className="font-mono text-[11px] bg-primary/10 text-primary px-2 py-0.5 rounded-md font-bold">
+                                S/N: {d.serialNumber}
+                              </span>
+                            )}
+                          </div>
+                          <p className="font-medium text-slate-800 text-xs">
+                            {d.tonersDelivered?.map((t, tIdx) => (
+                              <span key={tIdx} className="mr-2">
+                                • {t.quantity} un. <strong>{t.model}</strong> {t.serialNumber ? `(Serie: ${t.serialNumber})` : ''}
+                              </span>
+                            ))}
+                          </p>
+                          <p className="text-[10px] text-slate-400">
                             Entregado por: {d.technician} • Recibió: {d.receiver || selectedAgency.contactPerson}
+                            {d.notes && <span className="italic"> — "{d.notes}"</span>}
                           </p>
                         </div>
                         <button
                           onClick={() => setCurrentReceiptData(d)}
-                          className="px-2.5 py-1 bg-surface-container hover:bg-surface-container-high rounded-lg font-bold text-slate-700 flex items-center gap-1 cursor-pointer"
-                          title="Ver Comprobante"
+                          className="px-2.5 py-1.5 bg-surface-container hover:bg-surface-container-high rounded-xl font-bold text-slate-700 flex items-center gap-1 cursor-pointer border border-outline-variant/20 flex-shrink-0"
+                          title="Ver Comprobante Oficial"
                         >
                           <span className="material-symbols-outlined text-[15px]">print</span>
                           <span>Comprobante</span>
@@ -1048,40 +1175,48 @@ export default function OutsourcingManagement() {
                 )}
               </div>
 
-              {/* Toner Change / Installation History */}
+              {/* Consumable Installation / Consumption History */}
               <div className="pt-4 border-t border-outline-variant/20">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
                     <span className="material-symbols-outlined text-amber-600 text-[18px]">published_with_changes</span>
                     <h4 className="font-extrabold text-xs uppercase tracking-wider text-slate-600">
-                      Historial de Tóners Instalados en Equipos (Consumo Real)
+                      Historial de Insumos / Tóners Instalados en Equipos (Consumo Real)
                     </h4>
                   </div>
                 </div>
 
                 {(selectedAgency.changeHistory || []).length === 0 ? (
                   <p className="text-xs text-slate-400 italic p-3 bg-surface-container-low rounded-xl">
-                    No se registran cambios de tóner aún en esta agencia.
+                    No se registran instalaciones de insumos aún en esta agencia.
                   </p>
                 ) : (
                   <div className="space-y-2">
                     {selectedAgency.changeHistory.map((c, idx) => (
-                      <div key={idx} className="p-3 bg-amber-50/40 rounded-xl border border-amber-200/50 flex items-center justify-between text-xs">
-                        <div>
-                          <div className="flex items-center gap-2">
+                      <div key={idx} className="p-3 bg-amber-50/50 rounded-xl border border-amber-200/60 flex items-center justify-between text-xs">
+                        <div className="space-y-0.5">
+                          <div className="flex flex-wrap items-center gap-2">
                             <span className="font-extrabold text-amber-900">
                               - {c.quantity} un. {c.tonerModel}
                             </span>
                             <span className="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-bold">
-                              Instalado en: {c.printerModel}
+                              {c.consumableType || 'Tóner'}
                             </span>
+                            <span className="text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full font-medium">
+                              Equipo: {c.printerModel}
+                            </span>
+                            {c.serialNumber && (
+                              <span className="font-mono text-[11px] bg-amber-200/70 text-amber-900 px-2 py-0.5 rounded-md font-bold">
+                                S/N Insumo: {c.serialNumber}
+                              </span>
+                            )}
                           </div>
-                          <p className="text-[11px] text-slate-500 mt-1">
-                            Fecha: {c.date} • Responsable: <strong>{c.installedBy}</strong>
-                            {c.notes && <span className="text-slate-400 italic"> — "{c.notes}"</span>}
+                          <p className="text-[11px] text-slate-600">
+                            Fecha: <strong>{c.date}</strong> • Responsable: <strong>{c.installedBy}</strong>
+                            {c.notes && <span className="text-slate-500 italic"> — "{c.notes}"</span>}
                           </p>
                         </div>
-                        <span className="material-symbols-outlined text-amber-600 text-[20px]">check_circle</span>
+                        <span className="material-symbols-outlined text-amber-600 text-[22px] flex-shrink-0">check_circle</span>
                       </div>
                     ))}
                   </div>
@@ -1131,7 +1266,7 @@ export default function OutsourcingManagement() {
         </div>
       )}
 
-      {/* Modal: Registrar Cambio / Instalación de Tóner */}
+      {/* Modal: Registrar Cambio / Instalación de Tóner / Insumo */}
       {isInstallModalOpen && selectedAgency && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-surface-container-lowest rounded-3xl p-6 w-full max-w-lg shadow-2xl border border-outline-variant/30">
@@ -1141,7 +1276,7 @@ export default function OutsourcingManagement() {
                   <span className="material-symbols-outlined text-[20px]">build_circle</span>
                 </div>
                 <div>
-                  <h3 className="font-black text-base text-on-surface">Instalar Tóner en Impresora</h3>
+                  <h3 className="font-black text-base text-on-surface">Instalar Insumo / Tóner en Impresora</h3>
                   <p className="text-xs text-slate-400">Descuenta 1 unidad de la reserva de {selectedAgency.agencyName}</p>
                 </div>
               </div>
@@ -1157,23 +1292,26 @@ export default function OutsourcingManagement() {
               <div className="p-3 bg-amber-50/60 rounded-xl border border-amber-200 text-xs text-amber-900 flex items-start gap-2">
                 <span className="material-symbols-outlined text-[18px] text-amber-600 flex-shrink-0">info</span>
                 <span>
-                  Al confirmar, el cartucho se registrará como instalado en la impresora y se descontará del stock de reserva de la sucursal, recalculando inmediatamente el semáforo en el mapa.
+                  Al confirmar, el cartucho o bolsa de tinta se registrará como instalado con su número de serie y fecha, descontándose de la reserva de la sucursal y sincronizándose con Supabase.
                 </span>
               </div>
 
               <div>
                 <label className="block text-xs font-bold text-slate-500 mb-1.5">
-                  Modelo de Tóner a Instalar *
+                  Modelo de Insumo a Instalar *
                 </label>
                 <select
                   required
                   value={installForm.tonerId}
                   onChange={(e) => {
                     const toner = selectedAgency.toners?.find(t => t.id === e.target.value);
+                    const matchedPrinter = selectedAgency.printers?.find(p => p.model === toner?.compatiblePrinter) || selectedAgency.printers?.[0];
                     setInstallForm({
                       ...installForm,
                       tonerId: e.target.value,
-                      printerModel: toner?.compatiblePrinter || installForm.printerModel
+                      consumableType: toner?.type || 'Tóner',
+                      printerModel: matchedPrinter ? `${matchedPrinter.model} (${matchedPrinter.location})` : (toner?.compatiblePrinter || installForm.printerModel),
+                      printerSerial: matchedPrinter?.serial || ''
                     });
                   }}
                   className="w-full px-3 py-2.5 bg-surface-container-low border border-outline-variant/30 rounded-xl text-xs font-bold text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
@@ -1181,7 +1319,7 @@ export default function OutsourcingManagement() {
                   <option value="">-- Seleccione el modelo --</option>
                   {(selectedAgency.toners || []).map(t => (
                     <option key={t.id} value={t.id} disabled={t.currentStock === 0}>
-                      {t.model} ({t.color}) - Stock en reserva: {t.currentStock} un. {t.currentStock === 0 ? '(AGOTADO)' : ''}
+                      [{t.type || 'Tóner'}] {t.model} ({t.color}) - Reserva: {t.currentStock} un. {t.currentStock === 0 ? '(AGOTADO)' : ''}
                     </option>
                   ))}
                 </select>
@@ -1190,25 +1328,53 @@ export default function OutsourcingManagement() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-slate-500 mb-1.5">
-                    Impresora de Destino *
+                    Tipo de Insumo *
                   </label>
                   <select
-                    value={installForm.printerModel}
-                    onChange={(e) => setInstallForm({ ...installForm, printerModel: e.target.value })}
-                    className="w-full px-3 py-2.5 bg-surface-container-low border border-outline-variant/30 rounded-xl text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
+                    value={installForm.consumableType}
+                    onChange={(e) => setInstallForm({ ...installForm, consumableType: e.target.value })}
+                    className="w-full px-3 py-2 bg-surface-container-low border border-outline-variant/30 rounded-xl text-xs font-bold text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
                   >
-                    {(selectedAgency.printers || []).map((p, idx) => (
-                      <option key={idx} value={`${p.model} (${p.location})`}>
-                        {p.model} - {p.location}
-                      </option>
-                    ))}
-                    <option value="Otra impresora de la agencia">Otra impresora de la agencia</option>
+                    <option value="Bolsa de Tinta">Bolsa de Tinta (Epson)</option>
+                    <option value="Tóner">Tóner (Láser HP / Brother / Kyocera)</option>
+                    <option value="Tambor / Drum">Tambor / Drum (Brother)</option>
+                    <option value="Botella de Tinta">Botella de Tinta</option>
+                    <option value="Caja de Mantenimiento">Caja de Mantenimiento</option>
                   </select>
                 </div>
 
                 <div>
                   <label className="block text-xs font-bold text-slate-500 mb-1.5">
-                    Cantidad Utilizada *
+                    Fecha de Instalación *
+                  </label>
+                  <input
+                    type="date"
+                    required
+                    value={installForm.installDate}
+                    onChange={(e) => setInstallForm({ ...installForm, installDate: e.target.value })}
+                    className="w-full px-3 py-2 bg-surface-container-low border border-outline-variant/30 rounded-xl text-xs font-bold text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 mb-1.5">
+                    Nº de Serie / Código del Insumo *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="ej. SN-T11A-981204 / SN-TN3615-5591"
+                    value={installForm.serialNumber}
+                    onChange={(e) => setInstallForm({ ...installForm, serialNumber: e.target.value })}
+                    className="w-full px-3 py-2 bg-surface-container-low border border-outline-variant/30 rounded-xl text-xs font-mono font-bold text-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 mb-1.5">
+                    Cantidad a Instalar *
                   </label>
                   <input
                     type="number"
@@ -1217,9 +1383,34 @@ export default function OutsourcingManagement() {
                     required
                     value={installForm.quantity}
                     onChange={(e) => setInstallForm({ ...installForm, quantity: e.target.value })}
-                    className="w-full px-3 py-2.5 bg-surface-container-low border border-outline-variant/30 rounded-xl text-xs font-mono font-bold text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
+                    className="w-full px-3 py-2 bg-surface-container-low border border-outline-variant/30 rounded-xl text-xs font-mono font-bold text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-500 mb-1.5">
+                  Impresora de Destino *
+                </label>
+                <select
+                  value={installForm.printerModel}
+                  onChange={(e) => {
+                    const selPrinter = selectedAgency.printers?.find(p => `${p.model} (${p.location})` === e.target.value);
+                    setInstallForm({
+                      ...installForm,
+                      printerModel: e.target.value,
+                      printerSerial: selPrinter?.serial || installForm.printerSerial
+                    });
+                  }}
+                  className="w-full px-3 py-2.5 bg-surface-container-low border border-outline-variant/30 rounded-xl text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
+                >
+                  {(selectedAgency.printers || []).map((p, idx) => (
+                    <option key={idx} value={`${p.model} (${p.location})`}>
+                      {p.model} - {p.location} {p.serial ? `[S/N: ${p.serial}]` : ''}
+                    </option>
+                  ))}
+                  <option value="Otra impresora de la sucursal">Otra impresora de la sucursal</option>
+                </select>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -1264,7 +1455,7 @@ export default function OutsourcingManagement() {
                   className="px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold shadow-md shadow-amber-500/25 flex items-center gap-1.5 cursor-pointer"
                 >
                   <span className="material-symbols-outlined text-[16px]">check_circle</span>
-                  <span>Confirmar Cambio de Tóner</span>
+                  <span>Confirmar Instalación de Insumo</span>
                 </button>
               </div>
             </form>
@@ -1272,7 +1463,7 @@ export default function OutsourcingManagement() {
         </div>
       )}
 
-      {/* Modal: Registrar Entrega de Tóners */}
+      {/* Modal: Registrar Entrega de Tóners / Suministros */}
       {isDeliveryModalOpen && selectedAgency && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-surface-container-lowest rounded-3xl p-6 w-full max-w-lg shadow-2xl border border-outline-variant/30">
@@ -1282,8 +1473,8 @@ export default function OutsourcingManagement() {
                   <span className="material-symbols-outlined text-[20px]">local_shipping</span>
                 </div>
                 <div>
-                  <h3 className="font-black text-base text-on-surface">Registrar Entrega de Tóners</h3>
-                  <p className="text-xs text-slate-400">{selectedAgency.agencyName}</p>
+                  <h3 className="font-black text-base text-on-surface">Registrar Entrega de Suministros / Tintas / Tóners</h3>
+                  <p className="text-xs text-slate-400">{selectedAgency.agencyName} ({selectedAgency.clientName})</p>
                 </div>
               </div>
               <button 
@@ -1297,24 +1488,77 @@ export default function OutsourcingManagement() {
             <form onSubmit={handleRecordDelivery} className="space-y-4">
               <div>
                 <label className="block text-xs font-bold text-slate-500 mb-1.5">
-                  Seleccionar Modelo de Tóner a Entregar *
+                  Seleccionar Modelo de Insumo a Entregar *
                 </label>
                 <select
                   required
                   value={deliveryForm.tonerId}
-                  onChange={(e) => setDeliveryForm({ ...deliveryForm, tonerId: e.target.value })}
+                  onChange={(e) => {
+                    const toner = selectedAgency.toners?.find(t => t.id === e.target.value);
+                    setDeliveryForm({
+                      ...deliveryForm,
+                      tonerId: e.target.value,
+                      consumableType: toner?.type || 'Tóner'
+                    });
+                  }}
                   className="w-full px-3 py-2.5 bg-surface-container-low border border-outline-variant/30 rounded-xl text-xs font-bold text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
                 >
                   <option value="">-- Seleccione el modelo --</option>
                   {(selectedAgency.toners || []).map(t => (
                     <option key={t.id} value={t.id}>
-                      {t.model} ({t.color}) - Stock actual: {t.currentStock} un.
+                      [{t.type || 'Tóner'}] {t.model} ({t.color}) - Stock actual: {t.currentStock} un.
                     </option>
                   ))}
                 </select>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 mb-1.5">
+                    Tipo de Insumo *
+                  </label>
+                  <select
+                    value={deliveryForm.consumableType}
+                    onChange={(e) => setDeliveryForm({ ...deliveryForm, consumableType: e.target.value })}
+                    className="w-full px-3 py-2 bg-surface-container-low border border-outline-variant/30 rounded-xl text-xs font-bold text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
+                  >
+                    <option value="Bolsa de Tinta">Bolsa de Tinta (Epson)</option>
+                    <option value="Tóner">Tóner (Láser HP / Brother / Kyocera)</option>
+                    <option value="Tambor / Drum">Tambor / Drum (Brother)</option>
+                    <option value="Botella de Tinta">Botella de Tinta</option>
+                    <option value="Caja de Mantenimiento">Caja de Mantenimiento</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 mb-1.5">
+                    Fecha de Entrega *
+                  </label>
+                  <input
+                    type="date"
+                    required
+                    value={deliveryForm.deliveryDate}
+                    onChange={(e) => setDeliveryForm({ ...deliveryForm, deliveryDate: e.target.value })}
+                    className="w-full px-3 py-2 bg-surface-container-low border border-outline-variant/30 rounded-xl text-xs font-bold text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 mb-1.5">
+                    Nº de Serie / Lote del Insumo *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="ej. SN-T11A-981204 / LOTE-2026-09"
+                    value={deliveryForm.serialNumber}
+                    onChange={(e) => setDeliveryForm({ ...deliveryForm, serialNumber: e.target.value })}
+                    className="w-full px-3 py-2 bg-surface-container-low border border-outline-variant/30 rounded-xl text-xs font-mono font-bold text-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                </div>
+
                 <div>
                   <label className="block text-xs font-bold text-slate-500 mb-1.5">
                     Cantidad a Entregar *
@@ -1326,21 +1570,22 @@ export default function OutsourcingManagement() {
                     required
                     value={deliveryForm.quantity}
                     onChange={(e) => setDeliveryForm({ ...deliveryForm, quantity: e.target.value })}
-                    className="w-full px-3 py-2.5 bg-surface-container-low border border-outline-variant/30 rounded-xl text-xs font-mono font-bold text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
+                    className="w-full px-3 py-2 bg-surface-container-low border border-outline-variant/30 rounded-xl text-xs font-mono font-bold text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
                   />
                 </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 mb-1.5">
-                    Técnico Responsable *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={deliveryForm.technician}
-                    onChange={(e) => setDeliveryForm({ ...deliveryForm, technician: e.target.value })}
-                    className="w-full px-3 py-2.5 bg-surface-container-low border border-outline-variant/30 rounded-xl text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
-                  />
-                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-500 mb-1.5">
+                  Técnico Responsable *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={deliveryForm.technician}
+                  onChange={(e) => setDeliveryForm({ ...deliveryForm, technician: e.target.value })}
+                  className="w-full px-3 py-2.5 bg-surface-container-low border border-outline-variant/30 rounded-xl text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-primary"
+                />
               </div>
 
               <div>
@@ -1351,7 +1596,7 @@ export default function OutsourcingManagement() {
                   rows="2"
                   value={deliveryForm.notes}
                   onChange={(e) => setDeliveryForm({ ...deliveryForm, notes: e.target.value })}
-                  placeholder="Detalles sobre precintos, cajas o requerimiento especial..."
+                  placeholder="Detalles sobre precintos de seguridad, cajas o requerimiento especial..."
                   className="w-full px-3 py-2 bg-surface-container-low border border-outline-variant/30 rounded-xl text-xs text-on-surface focus:outline-none focus:ring-1 focus:ring-primary resize-none"
                 />
               </div>
@@ -1535,47 +1780,128 @@ export default function OutsourcingManagement() {
                 </div>
               </div>
 
-              <div className="bg-surface-container-low p-3 rounded-2xl border border-outline-variant/20 space-y-3">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block">
-                  Configuración de Tóner Inicial
-                </span>
-                <div className="grid grid-cols-2 gap-3">
+              <div className="bg-surface-container-low p-3.5 rounded-2xl border border-outline-variant/20 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-black uppercase tracking-wider text-slate-700 block">
+                    Equipamiento & Insumo Inicial
+                  </span>
+                  <span className="text-[10px] text-slate-400">Podrás añadir más insumos luego de crear</span>
+                </div>
+
+                {/* Presets */}
+                <div className="flex flex-wrap gap-1.5 pb-1">
+                  <button
+                    type="button"
+                    onClick={() => setNewAgencyForm({
+                      ...newAgencyForm,
+                      printerModel: 'Epson WorkForce Enterprise AM-C400',
+                      tonerModel: 'Bolsa de Tinta Epson T11A Black',
+                      consumableType: 'Bolsa de Tinta',
+                      color: 'Negro'
+                    })}
+                    className="px-2 py-1 bg-white hover:bg-emerald-50 text-emerald-800 border border-outline-variant/30 rounded-lg text-[10px] font-bold cursor-pointer transition-colors"
+                  >
+                    + Epson AM-C400 (Tinta)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setNewAgencyForm({
+                      ...newAgencyForm,
+                      printerModel: 'Epson WorkForce Pro WF-M5899',
+                      tonerModel: 'Bolsa de Tinta Epson T11U Black',
+                      consumableType: 'Bolsa de Tinta',
+                      color: 'Negro'
+                    })}
+                    className="px-2 py-1 bg-white hover:bg-cyan-50 text-cyan-800 border border-outline-variant/30 rounded-lg text-[10px] font-bold cursor-pointer transition-colors"
+                  >
+                    + Epson WF-M5899 (Tinta)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setNewAgencyForm({
+                      ...newAgencyForm,
+                      printerModel: 'BROTHER MFC-L6915DW',
+                      tonerModel: 'Tóner Brother TN-3615 / TN-3615XXL',
+                      consumableType: 'Tóner',
+                      color: 'Negro'
+                    })}
+                    className="px-2 py-1 bg-white hover:bg-blue-50 text-blue-800 border border-outline-variant/30 rounded-lg text-[10px] font-bold cursor-pointer transition-colors"
+                  >
+                    + Brother MFC-L6915DW (Tóner)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setNewAgencyForm({
+                      ...newAgencyForm,
+                      printerModel: 'HP LaserJet Enterprise M507dn',
+                      tonerModel: 'HP 89A (CF289A)',
+                      consumableType: 'Tóner',
+                      color: 'Negro'
+                    })}
+                    className="px-2 py-1 bg-white hover:bg-slate-100 text-slate-700 border border-outline-variant/30 rounded-lg text-[10px] font-bold cursor-pointer transition-colors"
+                  >
+                    + HP M507dn
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-400 mb-1">Modelo de Impresora</label>
+                    <label className="block text-[10px] font-bold text-slate-500 mb-1">Modelo de Impresora</label>
                     <input
                       type="text"
+                      required
                       value={newAgencyForm.printerModel}
                       onChange={(e) => setNewAgencyForm({ ...newAgencyForm, printerModel: e.target.value })}
-                      className="w-full px-2.5 py-1.5 bg-white border border-outline-variant/30 rounded-lg text-xs"
+                      placeholder="ej. Epson AM-C400 / Brother MFC-L6915DW"
+                      className="w-full px-2.5 py-1.5 bg-white border border-outline-variant/30 rounded-lg text-xs font-bold"
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-400 mb-1">Modelo de Tóner</label>
+                    <label className="block text-[10px] font-bold text-slate-500 mb-1">Tipo de Insumo</label>
+                    <select
+                      value={newAgencyForm.consumableType || 'Tóner'}
+                      onChange={(e) => setNewAgencyForm({ ...newAgencyForm, consumableType: e.target.value })}
+                      className="w-full px-2.5 py-1.5 bg-white border border-outline-variant/30 rounded-lg text-xs font-bold"
+                    >
+                      <option value="Bolsa de Tinta">Bolsa de Tinta (Epson)</option>
+                      <option value="Tóner">Tóner (Láser)</option>
+                      <option value="Tambor / Drum">Tambor / Drum</option>
+                      <option value="Botella de Tinta">Botella de Tinta</option>
+                      <option value="Caja de Mantenimiento">Caja de Mantenimiento</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 mb-1">Modelo de Insumo</label>
                     <input
                       type="text"
+                      required
                       value={newAgencyForm.tonerModel}
                       onChange={(e) => setNewAgencyForm({ ...newAgencyForm, tonerModel: e.target.value })}
-                      className="w-full px-2.5 py-1.5 bg-white border border-outline-variant/30 rounded-lg text-xs"
+                      placeholder="ej. T11A Black / TN-3615"
+                      className="w-full px-2.5 py-1.5 bg-white border border-outline-variant/30 rounded-lg text-xs font-bold"
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-400 mb-1">Stock de Reserva Inicial</label>
+                    <label className="block text-[10px] font-bold text-slate-500 mb-1">Stock Reserva Inicial</label>
                     <input
                       type="number"
                       min="0"
                       value={newAgencyForm.initialStock}
                       onChange={(e) => setNewAgencyForm({ ...newAgencyForm, initialStock: e.target.value })}
-                      className="w-full px-2.5 py-1.5 bg-white border border-outline-variant/30 rounded-lg text-xs font-mono"
+                      className="w-full px-2.5 py-1.5 bg-white border border-outline-variant/30 rounded-lg text-xs font-mono font-bold text-center"
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-bold text-slate-400 mb-1">Stock Mínimo (Alerta)</label>
+                    <label className="block text-[10px] font-bold text-slate-500 mb-1">Mínimo (Alerta)</label>
                     <input
                       type="number"
                       min="1"
                       value={newAgencyForm.minStock}
                       onChange={(e) => setNewAgencyForm({ ...newAgencyForm, minStock: e.target.value })}
-                      className="w-full px-2.5 py-1.5 bg-white border border-outline-variant/30 rounded-lg text-xs font-mono"
+                      className="w-full px-2.5 py-1.5 bg-white border border-outline-variant/30 rounded-lg text-xs font-mono font-bold text-center"
                     />
                   </div>
                 </div>
@@ -2066,7 +2392,7 @@ export default function OutsourcingManagement() {
       {/* Edit Agency Modal */}
       {isEditAgencyModalOpen && editAgencyForm && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-surface-container-lowest rounded-3xl p-6 w-full max-w-2xl shadow-2xl border border-outline-variant/30 my-8">
+          <div className="bg-surface-container-lowest rounded-3xl p-6 w-full max-w-3xl shadow-2xl border border-outline-variant/30 my-8">
             <div className="flex items-center justify-between pb-4 mb-4 border-b border-outline-variant/20">
               <div className="flex items-center gap-2">
                 <div className="w-9 h-9 rounded-xl bg-slate-800 text-white flex items-center justify-center">
@@ -2215,51 +2541,344 @@ export default function OutsourcingManagement() {
                 </div>
               </div>
 
-              {/* Toners in Agency Table / Stock editor */}
+              {/* Consumables Management (Toners, Ink Packs, Drums) */}
+              <div className="bg-surface-container-low p-4 rounded-2xl border border-outline-variant/20 space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div>
+                    <span className="text-xs font-black uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+                      <span className="material-symbols-outlined text-[18px] text-primary">inventory_2</span>
+                      <span>Control & Configuración de Insumos (Tóners / Tintas / Tambores)</span>
+                    </span>
+                    <p className="text-[11px] text-slate-400">
+                      Personaliza modelos, tipo de insumo (tóner, bolsa de tinta Epson, drum Brother), stock y alertas
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleAddConsumableToEditAgency()}
+                    className="px-3 py-1.5 bg-primary text-white rounded-xl text-xs font-bold hover:bg-primary/90 transition-all flex items-center gap-1 self-start cursor-pointer shadow-sm"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">add</span>
+                    <span>+ Añadir Insumo</span>
+                  </button>
+                </div>
+
+                {/* Quick Presets for Epson, Brother, and HP */}
+                <div className="p-2.5 bg-white/80 rounded-xl border border-outline-variant/20 text-xs space-y-1.5">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
+                    Plantillas Rápidas de Insumos:
+                  </span>
+                  <div className="flex flex-wrap gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => handleAddConsumableToEditAgency({
+                        model: 'Bolsa de Tinta Epson T11A Black',
+                        type: 'Bolsa de Tinta',
+                        color: 'Negro',
+                        yieldPages: '10,000 págs',
+                        currentStock: 2,
+                        minStock: 2,
+                        compatiblePrinter: 'Epson WorkForce Enterprise AM-C400'
+                      })}
+                      className="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-lg text-[11px] font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                      title="Añadir Tinta Negra para Epson AM-C400 (Ecofuturo)"
+                    >
+                      <span className="material-symbols-outlined text-[14px]">water_drop</span>
+                      <span>+ Tinta Epson AM-C400 Black</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleAddConsumableToEditAgency({
+                        model: 'Bolsa de Tinta Epson T11U Black',
+                        type: 'Bolsa de Tinta',
+                        color: 'Negro',
+                        yieldPages: '40,000 págs',
+                        currentStock: 2,
+                        minStock: 1,
+                        compatiblePrinter: 'Epson WorkForce Pro WF-M5899'
+                      })}
+                      className="px-2.5 py-1 bg-cyan-50 hover:bg-cyan-100 text-cyan-800 border border-cyan-200 rounded-lg text-[11px] font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                      title="Añadir Tinta Negra para Epson WF-M5899 (Ecofuturo)"
+                    >
+                      <span className="material-symbols-outlined text-[14px]">water_drop</span>
+                      <span>+ Tinta Epson WF-M5899 Black</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleAddConsumableToEditAgency({
+                        model: 'Tóner Brother TN-3615 / TN-3615XXL',
+                        type: 'Tóner',
+                        color: 'Negro',
+                        yieldPages: '18,000 págs',
+                        currentStock: 3,
+                        minStock: 2,
+                        compatiblePrinter: 'BROTHER MFC-L6915DW'
+                      })}
+                      className="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200 rounded-lg text-[11px] font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                      title="Añadir Tóner para Brother MFC-L6915DW (Prodem)"
+                    >
+                      <span className="material-symbols-outlined text-[14px]">print</span>
+                      <span>+ Tóner Brother TN-3615</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleAddConsumableToEditAgency({
+                        model: 'Unidad de Tambor / Drum DR-3600',
+                        type: 'Tambor / Drum',
+                        color: 'Monocromático',
+                        yieldPages: '75,000 págs',
+                        currentStock: 2,
+                        minStock: 1,
+                        compatiblePrinter: 'BROTHER MFC-L6915DW'
+                      })}
+                      className="px-2.5 py-1 bg-purple-50 hover:bg-purple-100 text-purple-800 border border-purple-200 rounded-lg text-[11px] font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                      title="Añadir Tambor de Imagen Brother DR-3600 (Prodem)"
+                    >
+                      <span className="material-symbols-outlined text-[14px]">cyclone</span>
+                      <span>+ Tambor Brother DR-3600</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleAddConsumableToEditAgency({
+                        model: 'HP 89A (CF289A)',
+                        type: 'Tóner',
+                        color: 'Negro',
+                        yieldPages: '5,000 págs',
+                        currentStock: 2,
+                        minStock: 2,
+                        compatiblePrinter: 'HP LaserJet Enterprise M507dn'
+                      })}
+                      className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-lg text-[11px] font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                      title="Añadir Tóner HP 89A"
+                    >
+                      <span className="material-symbols-outlined text-[14px]">inventory_2</span>
+                      <span>+ Tóner HP 89A</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* List of Consumables */}
+                <div className="space-y-3">
+                  {(editAgencyForm.toners || []).length === 0 ? (
+                    <div className="p-4 text-center text-slate-400 text-xs bg-white rounded-xl border border-dashed border-outline-variant/30">
+                      No hay insumos registrados para esta sucursal. Haz clic en "+ Añadir Insumo" o usa una de las plantillas rápidas.
+                    </div>
+                  ) : (
+                    editAgencyForm.toners.map((toner, idx) => (
+                      <div key={toner.id || idx} className="p-3.5 bg-white rounded-2xl border border-outline-variant/25 shadow-sm space-y-3">
+                        <div className="flex items-center justify-between border-b border-outline-variant/15 pb-2">
+                          <div className="flex items-center gap-2">
+                            <span className="w-5 h-5 rounded-full bg-slate-900 text-white font-mono text-[10px] font-bold flex items-center justify-center">
+                              {idx + 1}
+                            </span>
+                            <span className="font-extrabold text-xs text-slate-800">
+                              {toner.model || 'Nuevo Insumo'}
+                            </span>
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-primary/10 text-primary">
+                              {toner.type || 'Tóner'}
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveConsumableFromEditAgency(idx)}
+                            className="p-1 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                            title="Eliminar este insumo de la sucursal"
+                          >
+                            <span className="material-symbols-outlined text-[18px]">delete</span>
+                          </button>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                          <div className="sm:col-span-2">
+                            <label className="block text-[10px] font-bold text-slate-500 mb-1">
+                              Modelo del Insumo / Cartucho / Tinta *
+                            </label>
+                            <input
+                              type="text"
+                              required
+                              value={toner.model}
+                              onChange={(e) => {
+                                const newToners = [...editAgencyForm.toners];
+                                newToners[idx] = { ...newToners[idx], model: e.target.value };
+                                setEditAgencyForm({ ...editAgencyForm, toners: newToners });
+                              }}
+                              placeholder="ej. Bolsa de Tinta Epson T11A Black / Tóner Brother TN-3615"
+                              className="w-full px-2.5 py-1.5 bg-surface-container-low border border-outline-variant/30 rounded-xl text-xs font-bold text-slate-800"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-[10px] font-bold text-slate-500 mb-1">
+                              Tipo de Insumo *
+                            </label>
+                            <select
+                              value={toner.type || 'Tóner'}
+                              onChange={(e) => {
+                                const newToners = [...editAgencyForm.toners];
+                                newToners[idx] = { ...newToners[idx], type: e.target.value };
+                                setEditAgencyForm({ ...editAgencyForm, toners: newToners });
+                              }}
+                              className="w-full px-2.5 py-1.5 bg-surface-container-low border border-outline-variant/30 rounded-xl text-xs font-bold text-slate-800"
+                            >
+                              <option value="Bolsa de Tinta">Bolsa de Tinta (Epson)</option>
+                              <option value="Tóner">Tóner (Láser HP / Brother / Kyocera)</option>
+                              <option value="Tambor / Drum">Tambor / Drum (Brother / Lexmark)</option>
+                              <option value="Botella de Tinta">Botella de Tinta</option>
+                              <option value="Caja de Mantenimiento">Caja de Mantenimiento</option>
+                              <option value="Cartucho de Tinta">Cartucho de Tinta Convencional</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                          <div>
+                            <label className="block text-[10px] font-bold text-slate-500 mb-1">Color</label>
+                            <select
+                              value={toner.color || 'Negro'}
+                              onChange={(e) => {
+                                const newToners = [...editAgencyForm.toners];
+                                newToners[idx] = { ...newToners[idx], color: e.target.value };
+                                setEditAgencyForm({ ...editAgencyForm, toners: newToners });
+                              }}
+                              className="w-full px-2.5 py-1.5 bg-surface-container-low border border-outline-variant/30 rounded-xl text-xs font-bold"
+                            >
+                              <option value="Negro">Negro (Black)</option>
+                              <option value="Cian">Cian (Cyan)</option>
+                              <option value="Magenta">Magenta</option>
+                              <option value="Amarillo">Amarillo (Yellow)</option>
+                              <option value="Monocromático">Monocromático</option>
+                              <option value="Tricolor">Tricolor</option>
+                              <option value="N/A">N/A</option>
+                            </select>
+                          </div>
+
+                          <div>
+                            <label className="block text-[10px] font-bold text-slate-500 mb-1">Impresora Compatible</label>
+                            <input
+                              type="text"
+                              value={toner.compatiblePrinter || ''}
+                              onChange={(e) => {
+                                const newToners = [...editAgencyForm.toners];
+                                newToners[idx] = { ...newToners[idx], compatiblePrinter: e.target.value };
+                                setEditAgencyForm({ ...editAgencyForm, toners: newToners });
+                              }}
+                              placeholder="ej. Epson AM-C400"
+                              className="w-full px-2.5 py-1.5 bg-surface-container-low border border-outline-variant/30 rounded-xl text-xs"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-[10px] font-bold text-slate-500 mb-1">Stock de Reserva</label>
+                            <input
+                              type="number"
+                              min="0"
+                              value={toner.currentStock}
+                              onChange={(e) => {
+                                const val = parseInt(e.target.value, 10) || 0;
+                                const newToners = [...editAgencyForm.toners];
+                                newToners[idx] = { ...newToners[idx], currentStock: val };
+                                setEditAgencyForm({ ...editAgencyForm, toners: newToners });
+                              }}
+                              className="w-full px-2.5 py-1.5 bg-surface-container-low border border-outline-variant/30 rounded-xl text-xs font-mono font-black text-center"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-[10px] font-bold text-slate-500 mb-1">Mínimo (Alerta)</label>
+                            <input
+                              type="number"
+                              min="1"
+                              value={toner.minStock}
+                              onChange={(e) => {
+                                const val = parseInt(e.target.value, 10) || 1;
+                                const newToners = [...editAgencyForm.toners];
+                                newToners[idx] = { ...newToners[idx], minStock: val };
+                                setEditAgencyForm({ ...editAgencyForm, toners: newToners });
+                              }}
+                              className="w-full px-2.5 py-1.5 bg-surface-container-low border border-outline-variant/30 rounded-xl text-xs font-mono font-bold text-center"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              {/* Printer Fleet Management */}
               <div className="bg-surface-container-low p-4 rounded-2xl border border-outline-variant/20 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-black uppercase tracking-wider text-slate-500">
-                    Control de Tóners de Reserva
-                  </span>
-                  <span className="text-[11px] text-slate-400">Modifica stock y umbrales mínimos</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-[18px] text-primary">print</span>
+                    <span className="text-xs font-black uppercase tracking-wider text-slate-700">
+                      Parque de Impresoras Instalado en Sucursal
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleAddPrinterToEditAgency}
+                    className="px-3 py-1.5 bg-surface-container hover:bg-surface-container-high text-slate-700 rounded-xl text-xs font-bold transition-all flex items-center gap-1 cursor-pointer border border-outline-variant/30"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">add</span>
+                    <span>+ Añadir Impresora</span>
+                  </button>
                 </div>
 
                 <div className="space-y-2">
-                  {(editAgencyForm.toners || []).map((toner, idx) => (
-                    <div key={toner.id || idx} className="grid grid-cols-1 sm:grid-cols-4 gap-2 items-center bg-white p-2.5 rounded-xl border border-outline-variant/20 text-xs">
-                      <div className="sm:col-span-2">
-                        <span className="font-bold text-slate-800 block truncate">{toner.model}</span>
-                        <span className="text-[10px] text-slate-400">{toner.compatiblePrinter}</span>
-                      </div>
-                      <div>
-                        <label className="block text-[10px] text-slate-400 font-bold">Stock Reserva</label>
+                  {(editAgencyForm.printers || []).map((printer, pIdx) => (
+                    <div key={pIdx} className="grid grid-cols-1 sm:grid-cols-12 gap-2 items-center bg-white p-2.5 rounded-xl border border-outline-variant/20 text-xs">
+                      <div className="sm:col-span-5">
+                        <label className="block text-[9px] font-bold text-slate-400">Modelo Impresora</label>
                         <input
-                          type="number"
-                          min="0"
-                          value={toner.currentStock}
+                          type="text"
+                          required
+                          value={printer.model}
                           onChange={(e) => {
-                            const val = parseInt(e.target.value, 10) || 0;
-                            const newToners = [...editAgencyForm.toners];
-                            newToners[idx] = { ...newToners[idx], currentStock: val };
-                            setEditAgencyForm({ ...editAgencyForm, toners: newToners });
+                            const newPrinters = [...editAgencyForm.printers];
+                            newPrinters[pIdx] = { ...newPrinters[pIdx], model: e.target.value };
+                            setEditAgencyForm({ ...editAgencyForm, printers: newPrinters });
                           }}
-                          className="w-full px-2 py-1 border border-slate-200 rounded-lg font-mono text-center text-xs font-bold"
+                          placeholder="ej. Epson AM-C400 / Brother MFC-L6915DW"
+                          className="w-full px-2 py-1 border border-slate-200 rounded-lg text-xs font-bold"
                         />
                       </div>
-                      <div>
-                        <label className="block text-[10px] text-slate-400 font-bold">Mínimo Alerta</label>
+                      <div className="sm:col-span-3">
+                        <label className="block text-[9px] font-bold text-slate-400">Ubicación</label>
                         <input
-                          type="number"
-                          min="1"
-                          value={toner.minStock}
+                          type="text"
+                          value={printer.location}
                           onChange={(e) => {
-                            const val = parseInt(e.target.value, 10) || 1;
-                            const newToners = [...editAgencyForm.toners];
-                            newToners[idx] = { ...newToners[idx], minStock: val };
-                            setEditAgencyForm({ ...editAgencyForm, toners: newToners });
+                            const newPrinters = [...editAgencyForm.printers];
+                            newPrinters[pIdx] = { ...newPrinters[pIdx], location: e.target.value };
+                            setEditAgencyForm({ ...editAgencyForm, printers: newPrinters });
                           }}
-                          className="w-full px-2 py-1 border border-slate-200 rounded-lg font-mono text-center text-xs font-bold"
+                          placeholder="ej. Cajas 1 a 4"
+                          className="w-full px-2 py-1 border border-slate-200 rounded-lg text-xs"
                         />
+                      </div>
+                      <div className="sm:col-span-3">
+                        <label className="block text-[9px] font-bold text-slate-400">Nº de Serie</label>
+                        <input
+                          type="text"
+                          value={printer.serial || ''}
+                          onChange={(e) => {
+                            const newPrinters = [...editAgencyForm.printers];
+                            newPrinters[pIdx] = { ...newPrinters[pIdx], serial: e.target.value };
+                            setEditAgencyForm({ ...editAgencyForm, printers: newPrinters });
+                          }}
+                          placeholder="ej. EPS-AMC400-01"
+                          className="w-full px-2 py-1 border border-slate-200 rounded-lg font-mono text-[11px]"
+                        />
+                      </div>
+                      <div className="sm:col-span-1 flex justify-center pt-3 sm:pt-0">
+                        <button
+                          type="button"
+                          onClick={() => handleRemovePrinterFromEditAgency(pIdx)}
+                          className="p-1.5 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                          title="Eliminar impresora"
+                        >
+                          <span className="material-symbols-outlined text-[18px]">delete</span>
+                        </button>
                       </div>
                     </div>
                   ))}

@@ -85,17 +85,19 @@ export default function OutsourcingDeliveryReceipt({ deliveryData, agency, shopI
             </div>
           </div>
 
-          {/* Toners Delivered Table */}
+          {/* Toners & Inks Delivered Table */}
           <div className="mb-4">
             <h3 className="font-bold text-[11px] text-slate-700 uppercase mb-1.5">
-              Detalle de Cartuchos y Tóners Entregados para Backup
+              Detalle de Cartuchos, Tintas y Suministros Entregados para Backup
             </h3>
             <table className="w-full border-collapse text-[11px]">
               <thead>
                 <tr className="bg-slate-100 text-slate-700 border-y border-slate-300">
-                  <th className="py-1.5 px-2 text-left font-bold w-12">#</th>
-                  <th className="py-1.5 px-2 text-left font-bold">Modelo de Tóner / Cartucho</th>
-                  <th className="py-1.5 px-2 text-left font-bold">Color</th>
+                  <th className="py-1.5 px-2 text-left font-bold w-10">#</th>
+                  <th className="py-1.5 px-2 text-left font-bold w-24">Tipo</th>
+                  <th className="py-1.5 px-2 text-left font-bold">Modelo de Insumo</th>
+                  <th className="py-1.5 px-2 text-left font-bold">Nº Serie / Lote</th>
+                  <th className="py-1.5 px-2 text-left font-bold w-16">Color</th>
                   <th className="py-1.5 px-2 text-left font-bold">Impresora Compatible</th>
                   <th className="py-1.5 px-2 text-center font-bold w-20">Cantidad</th>
                 </tr>
@@ -104,7 +106,15 @@ export default function OutsourcingDeliveryReceipt({ deliveryData, agency, shopI
                 {(deliveryData.tonersDelivered || []).map((t, idx) => (
                   <tr key={idx} className="border-b border-slate-200">
                     <td className="py-2 px-2 text-slate-500">{idx + 1}</td>
+                    <td className="py-2 px-2">
+                      <span className="font-semibold px-1.5 py-0.5 rounded text-[10px] bg-slate-100 text-slate-700">
+                        {t.consumableType || deliveryData.consumableType || 'Tóner'}
+                      </span>
+                    </td>
                     <td className="py-2 px-2 font-bold text-slate-900">{t.model}</td>
+                    <td className="py-2 px-2 font-mono text-[10px] text-slate-600">
+                      {t.serialNumber || deliveryData.serialNumber || 'S/N Registrado'}
+                    </td>
                     <td className="py-2 px-2 text-slate-600">{t.color || 'Negro'}</td>
                     <td className="py-2 px-2 text-slate-600">{t.compatiblePrinter || 'Flota Asignada'}</td>
                     <td className="py-2 px-2 text-center font-extrabold text-slate-900 bg-slate-50">

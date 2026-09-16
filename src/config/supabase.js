@@ -150,7 +150,8 @@ export const mapAgencyFromDb = (a) => ({
   lastReplenished: a.lastreplenished || a.lastReplenished || '',
   printers: a.printers || [],
   toners: a.toners || [],
-  deliveryHistory: a.deliveryhistory || a.deliveryHistory || []
+  deliveryHistory: a.deliveryhistory || a.deliveryHistory || [],
+  changeHistory: a.changehistory || a.changeHistory || []
 });
 
 export const mapAgencyToDb = (a) => ({
@@ -170,7 +171,8 @@ export const mapAgencyToDb = (a) => ({
   lastreplenished: a.lastReplenished || a.lastreplenished || '',
   printers: a.printers || [],
   toners: a.toners || [],
-  deliveryhistory: a.deliveryHistory || a.deliveryhistory || []
+  deliveryhistory: a.deliveryHistory || a.deliveryhistory || [],
+  changehistory: a.changeHistory || a.changehistory || []
 });
 
 export const mapClientFromDb = (c) => ({
