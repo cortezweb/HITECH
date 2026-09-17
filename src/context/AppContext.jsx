@@ -856,18 +856,33 @@ export const AppProvider = ({ children }) => {
   }, [page]);
 
   // State arrays driven by Supabase (with offline initial mock fallbacks)
-  const [products, setProducts] = useState(initialMockProducts);
-  const [tickets, setTickets] = useState(initialMockTickets);
+  const [products, setProducts] = useState(() => {
+    try {
+      const saved = localStorage.getItem('sistech_products');
+      if (saved !== null) return JSON.parse(saved);
+    } catch (e) {
+      console.warn('Error reading products from localStorage:', e);
+    }
+    return initialMockProducts;
+  });
+
+  const [tickets, setTickets] = useState(() => {
+    try {
+      const saved = localStorage.getItem('sistech_tickets');
+      if (saved !== null) return JSON.parse(saved);
+    } catch (e) {
+      console.warn('Error reading tickets from localStorage:', e);
+    }
+    return initialMockTickets;
+  });
+
   const [sales, setSales] = useState([]);
+
   const [outsourcingClients, setOutsourcingClients] = useState(() => {
     try {
       const saved = localStorage.getItem('sistech_outsourcing_clients');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        const existingIds = new Set(parsed.map(c => c.id));
-        const missing = initialMockOutsourcingClients.filter(c => !existingIds.has(c.id));
-        if (missing.length > 0) return [...parsed, ...missing];
-        return parsed;
+      if (saved !== null) {
+        return JSON.parse(saved);
       }
     } catch (e) {
       console.warn('Error reading outsourcing clients:', e);
@@ -878,18 +893,30 @@ export const AppProvider = ({ children }) => {
   const [outsourcingAgencies, setOutsourcingAgencies] = useState(() => {
     try {
       const saved = localStorage.getItem('sistech_outsourcing_agencies');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        const existingIds = new Set(parsed.map(a => a.id));
-        const missing = initialMockOutsourcingAgencies.filter(a => !existingIds.has(a.id));
-        if (missing.length > 0) return [...parsed, ...missing];
-        return parsed;
+      if (saved !== null) {
+        return JSON.parse(saved);
       }
     } catch (e) {
       console.warn('Error reading outsourcing agencies:', e);
     }
     return initialMockOutsourcingAgencies;
   });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('sistech_products', JSON.stringify(products));
+    } catch (e) {
+      console.warn('Error saving products to localStorage:', e);
+    }
+  }, [products]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('sistech_tickets', JSON.stringify(tickets));
+    } catch (e) {
+      console.warn('Error saving tickets to localStorage:', e);
+    }
+  }, [tickets]);
 
   useEffect(() => {
     try {
@@ -1209,16 +1236,16 @@ export const AppProvider = ({ children }) => {
     const fetchSupabaseData = async () => {
       try {
         const [
-          { data: prods },
-          { data: tix },
-          { data: sls },
-          { data: usrs },
-          { data: cfg },
-          { data: logs },
-          { data: att },
-          { data: closings },
-          { data: agencies },
-          { data: clients }
+          { data: prods, error: prodsErr },
+          { data: tix, error: tixErr },
+          { data: sls, error: slsErr },
+          { data: usrs, error: usrsErr },
+          { data: cfg, error: cfgErr },
+          { data: logs, error: logsErr },
+          { data: att, error: attErr },
+          { data: closings, error: closingsErr },
+          { data: agencies, error: agenciesErr },
+          { data: clients, error: clientsErr }
         ] = await Promise.all([
           supabase.from('products').select('*'),
           supabase.from('tickets').select('*'),
@@ -1232,42 +1259,86 @@ export const AppProvider = ({ children }) => {
           supabase.from('outsourcing_clients').select('*')
         ]);
 
-        if (prods && prods.length > 0) {
-          setProducts(prods.map(mapProductFromDb));
-        } else {
-          initialMockProducts.forEach(p => supabase.from('products').upsert(mapProductToDb(p)).catch(console.warn));
-          setProducts(initialMockProducts);
+        if (!prodsErr && prods) {
+          if (prods.length > 0) {
+            setProducts(prods.map(mapProductFromDb));
+          } else {
+            const localP = JSON.parse(localStorage.getItem('sistech_products') || '[]');
+            if (localP.length > 0) {
+              localP.forEach(p => supabase.from('products').upsert(mapProductToDb(p)).catch(console.warn));
+            } else {
+              initialMockProducts.forEach(p => supabase.from('products').upsert(mapProductToDb(p)).catch(console.warn));
+              setProducts(initialMockProducts);
+            }
+          }
         }
 
-        if (tix && tix.length > 0) {
-          setTickets(tix.map(mapTicketFromDb).sort((a, b) => b.id.localeCompare(a.id)));
-        } else {
-          initialMockTickets.forEach(t => supabase.from('tickets').upsert(mapTicketToDb(t)).catch(console.warn));
-          setTickets(initialMockTickets);
+        if (!tixErr && tix) {
+          if (tix.length > 0) {
+            setTickets(tix.map(mapTicketFromDb).sort((a, b) => b.id.localeCompare(a.id)));
+          } else {
+            const localT = JSON.parse(localStorage.getItem('sistech_tickets') || '[]');
+            if (localT.length > 0) {
+              localT.forEach(t => supabase.from('tickets').upsert(mapTicketToDb(t)).catch(console.warn));
+            } else {
+              initialMockTickets.forEach(t => supabase.from('tickets').upsert(mapTicketToDb(t)).catch(console.warn));
+              setTickets(initialMockTickets);
+            }
+          }
         }
 
-        if (sls && sls.length > 0) setSales(sls.map(mapSaleFromDb));
-        if (usrs && usrs.length > 0) setUsers(usrs);
-        if (logs && logs.length > 0) setActivityLogs(logs);
-        if (att && att.length > 0) setAttendanceLogs(att.map(mapAttendanceFromDb));
-        if (closings && closings.length > 0) setLastClosingTimestamp(closings[0].timestamp);
+        if (!slsErr && sls && sls.length > 0) setSales(sls.map(mapSaleFromDb));
+        if (!usrsErr && usrs && usrs.length > 0) {
+          setUsers(prev => {
+            const supabaseIds = new Set(usrs.map(u => u.id));
+            const localExtra = prev.filter(u => !supabaseIds.has(u.id));
+            return [...usrs, ...localExtra];
+          });
+        }
+        if (!logsErr && logs && logs.length > 0) setActivityLogs(logs);
+        if (!attErr && att && att.length > 0) setAttendanceLogs(att.map(mapAttendanceFromDb));
+        if (!closingsErr && closings && closings.length > 0) setLastClosingTimestamp(closings[0].timestamp);
 
-        if (agencies && agencies.length > 0) {
-          setOutsourcingAgencies(agencies.map(mapAgencyFromDb));
-        } else {
-          initialMockOutsourcingAgencies.forEach(a => supabase.from('outsourcing_agencies').upsert(mapAgencyToDb(a)).catch(console.warn));
+        if (!agenciesErr && agencies) {
+          if (agencies.length > 0) {
+            setOutsourcingAgencies(agencies.map(mapAgencyFromDb));
+          } else {
+            const localAg = JSON.parse(localStorage.getItem('sistech_outsourcing_agencies') || '[]');
+            if (localAg.length > 0) {
+              localAg.forEach(a => supabase.from('outsourcing_agencies').upsert(mapAgencyToDb(a)).catch(console.warn));
+            } else {
+              initialMockOutsourcingAgencies.forEach(a => supabase.from('outsourcing_agencies').upsert(mapAgencyToDb(a)).catch(console.warn));
+              setOutsourcingAgencies(initialMockOutsourcingAgencies);
+            }
+          }
+        } else if (agenciesErr) {
+          console.warn('outsourcing_agencies no disponible en Supabase, usando datos locales:', agenciesErr.message);
         }
 
-        if (clients && clients.length > 0) {
-          setOutsourcingClients(clients.map(mapClientFromDb));
-        } else {
-          initialMockOutsourcingClients.forEach(c => supabase.from('outsourcing_clients').upsert(mapClientToDb(c)).catch(console.warn));
+        if (!clientsErr && clients) {
+          if (clients.length > 0) {
+            setOutsourcingClients(clients.map(mapClientFromDb));
+          } else {
+            const localCl = JSON.parse(localStorage.getItem('sistech_outsourcing_clients') || '[]');
+            if (localCl.length > 0) {
+              localCl.forEach(c => supabase.from('outsourcing_clients').upsert(mapClientToDb(c)).catch(console.warn));
+            } else {
+              initialMockOutsourcingClients.forEach(c => supabase.from('outsourcing_clients').upsert(mapClientToDb(c)).catch(console.warn));
+              setOutsourcingClients(initialMockOutsourcingClients);
+            }
+          }
+        } else if (clientsErr) {
+          console.warn('outsourcing_clients no disponible en Supabase, usando datos locales:', clientsErr.message);
         }
 
-        if (cfg) {
+        if (!cfgErr && cfg) {
           cfg.forEach(row => {
             if (row.id === 'rolePermissions' && row.data) {
-              setRolePermissions(row.data);
+              setRolePermissions(prev => ({
+                ...prev,
+                ...row.data,
+                cliente_outsourcing: row.data.cliente_outsourcing || prev.cliente_outsourcing || ['outsourcing']
+              }));
             } else if (row.id === 'shopInfo' && row.data) {
               setShopInfo(row.data);
             }
@@ -1856,7 +1927,7 @@ export const AppProvider = ({ children }) => {
       
       setOutsourcingAgencies(prev => prev.filter(a => a.clientId !== clientId));
       if (isSupabaseConfigured && supabase) {
-        supabase.from('outsourcing_agencies').delete().eq('clientId', clientId).catch(console.warn);
+        supabase.from('outsourcing_agencies').delete().eq('clientid', clientId).catch(console.warn);
       }
     }
     if (isSupabaseConfigured && supabase) {
