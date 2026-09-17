@@ -1369,9 +1369,12 @@ export const AppProvider = ({ children }) => {
         if (!cfgErr && cfg) {
           cfg.forEach(row => {
             if (row.id === 'rolePermissions' && row.data) {
+              const adminList = row.data.admin || [];
+              const safeAdmin = adminList.includes('outsourcing') ? adminList : ['outsourcing', ...adminList];
               setRolePermissions(prev => ({
                 ...prev,
                 ...row.data,
+                admin: safeAdmin,
                 cliente_outsourcing: row.data.cliente_outsourcing || prev.cliente_outsourcing || ['outsourcing']
               }));
             } else if (row.id === 'shopInfo' && row.data) {
@@ -1452,7 +1455,16 @@ export const AppProvider = ({ children }) => {
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'config' }, (payload) => {
         if (payload.new) {
-          if (payload.new.id === 'rolePermissions' && payload.new.data) setRolePermissions(payload.new.data);
+          if (payload.new.id === 'rolePermissions' && payload.new.data) {
+            const adminList = payload.new.data.admin || [];
+            const safeAdmin = adminList.includes('outsourcing') ? adminList : ['outsourcing', ...adminList];
+            setRolePermissions(prev => ({
+              ...prev,
+              ...payload.new.data,
+              admin: safeAdmin,
+              cliente_outsourcing: payload.new.data.cliente_outsourcing || prev.cliente_outsourcing || ['outsourcing']
+            }));
+          }
           if (payload.new.id === 'shopInfo' && payload.new.data) setShopInfo(payload.new.data);
         }
       })
