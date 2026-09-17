@@ -58,7 +58,7 @@ function AppContent() {
       <TopBar />
 
       {/* Main Application Container */}
-      <main className="ml-[88px] pt-16 min-h-screen p-8 transition-all duration-300 print:ml-0 print:p-0 print:pt-0">
+      <main className="ml-0 md:ml-[88px] pt-16 min-h-screen p-3 sm:p-4 md:p-8 pb-24 md:pb-8 transition-all duration-300 print:ml-0 print:p-0 print:pt-0">
         <div className="max-w-[1440px] mx-auto print:max-w-none">
           {renderActivePage()}
         </div>
@@ -71,10 +71,10 @@ function AppContent() {
             setPage('service_registry');
             setSubstate('service_registry', 'seleccion');
           }}
-          className="fixed bottom-8 right-8 w-14 h-14 bg-gradient-to-br from-primary to-secondary text-white rounded-full shadow-lg flex items-center justify-center hover:scale-105 active:scale-95 transition-transform z-50 cursor-pointer print:hidden"
+          className="fixed bottom-20 md:bottom-8 right-4 md:right-8 w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-primary to-secondary text-white rounded-full shadow-xl flex items-center justify-center hover:scale-105 active:scale-95 transition-transform z-30 cursor-pointer print:hidden"
           title="Nueva Orden de Servicio"
         >
-          <span className="material-symbols-outlined text-[26px]">build_circle</span>
+          <span className="material-symbols-outlined text-[24px] sm:text-[26px]">build_circle</span>
         </button>
       )}
     </div>

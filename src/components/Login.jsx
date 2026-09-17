@@ -37,27 +37,27 @@ export default function Login() {
   ];
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0c1020] via-[#121c38] to-[#080b15] p-6 text-white relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0c1020] via-[#121c38] to-[#080b15] p-4 sm:p-6 text-white relative overflow-hidden">
       {/* Decorative blurred backgrounds */}
       <div className="absolute top-[-20%] left-[-20%] w-[60%] h-[60%] rounded-full bg-primary/20 blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[-20%] right-[-20%] w-[60%] h-[60%] rounded-full bg-secondary/15 blur-[120px] pointer-events-none" />
 
       <div className="w-full max-w-[480px] z-10">
         {/* Brand Logo & Name */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-secondary shadow-lg shadow-primary/30 mb-4 animate-pulse">
-            <span className="material-symbols-outlined text-[32px] text-white">bolt</span>
+        <div className="text-center mb-6 sm:mb-8">
+          <div className="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-primary to-secondary shadow-lg shadow-primary/30 mb-3 sm:mb-4 animate-pulse">
+            <span className="material-symbols-outlined text-[28px] sm:text-[32px] text-white">bolt</span>
           </div>
-          <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent">
             SISTECH POS
           </h1>
-          <p className="text-slate-400 text-sm mt-2">
+          <p className="text-slate-400 text-xs sm:text-sm mt-1 sm:mt-2">
             Gestión Integral de Ventas y Soporte Técnico
           </p>
         </div>
 
         {/* Login Card */}
-        <div className="glass border border-white/10 rounded-2xl p-8 shadow-2xl relative overflow-hidden bg-slate-900/40">
+        <div className="glass border border-white/10 rounded-2xl p-5 sm:p-8 shadow-2xl relative overflow-hidden bg-slate-900/40">
           <div className="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-primary to-secondary" />
 
           <h2 className="text-xl font-semibold mb-6">Iniciar Sesión</h2>

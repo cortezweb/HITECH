@@ -223,8 +223,8 @@ export default function Inventory() {
 
       {/* Main Registry Controls & Table */}
       <section className="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant/10 overflow-hidden text-left">
-        <div className="p-6 border-b border-outline-variant/10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div className="flex items-center gap-4">
+        <div className="p-4 sm:p-6 border-b border-outline-variant/10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div className="flex items-center gap-3 flex-wrap">
             <h2 className="text-[18px] font-bold text-on-surface">Registro Maestro</h2>
             <div className="flex gap-2">
               <span className="px-3 py-1 bg-surface-container rounded-full text-[12px] font-semibold text-on-surface-variant">
@@ -238,9 +238,9 @@ export default function Inventory() {
             </div>
           </div>
 
-          <div className="flex items-center gap-3 w-full md:w-auto">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
             {/* Search Input inside controls bar */}
-            <div className="flex items-center bg-surface-container-low rounded-xl px-3 py-2 border border-transparent focus-within:border-primary w-52 md:w-60">
+            <div className="flex items-center bg-surface-container-low rounded-xl px-3 py-2 border border-transparent focus-within:border-primary w-full sm:w-52 md:w-60">
               <span className="material-symbols-outlined text-on-surface-variant mr-1.5 text-[18px]">search</span>
               <input
                 type="text"
@@ -253,7 +253,7 @@ export default function Inventory() {
             
             <button 
               onClick={() => setSubstate('inventory', 'add')}
-              className="flex items-center gap-1.5 px-4 py-2.5 bg-primary text-on-primary rounded-xl font-semibold text-[13px] hover:brightness-105 active:scale-95 transition-all cursor-pointer flex-shrink-0"
+              className="flex items-center justify-center gap-1.5 px-4 py-2.5 bg-primary text-on-primary rounded-xl font-semibold text-[13px] hover:brightness-105 active:scale-95 transition-all cursor-pointer flex-shrink-0 shadow-sm"
             >
               <span className="material-symbols-outlined text-[16px]">add</span>
               <span>Agregar Activo</span>

@@ -528,55 +528,55 @@ export default function OutsourcingManagement() {
           </p>
         </div>
 
-        <div className="flex items-center gap-3 relative z-10">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3 relative z-10">
           {!isCorporateClient && (
             <button
               onClick={() => {
                 setClientModalTab('list');
                 setIsClientsModalOpen(true);
               }}
-              className="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold flex items-center gap-2 border border-white/15 transition-all cursor-pointer shadow-sm"
+              className="px-3 sm:px-4 py-2 sm:py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 sm:gap-2 border border-white/15 transition-all cursor-pointer shadow-sm"
               title="Administrar empresas y clientes corporativos"
             >
               <span className="material-symbols-outlined text-[18px]">business</span>
-              <span>Clientes Corporativos ({outsourcingClients.length})</span>
+              <span>Clientes ({outsourcingClients.length})</span>
             </button>
           )}
 
           {!isCorporateClient && (
             <button
               onClick={() => setIsNewAgencyModalOpen(true)}
-              className="px-4 py-2.5 bg-gradient-to-r from-primary to-secondary hover:shadow-lg hover:shadow-primary/30 text-white rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer"
+              className="px-3 sm:px-4 py-2 sm:py-2.5 bg-gradient-to-r from-primary to-secondary hover:shadow-lg hover:shadow-primary/30 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 sm:gap-2 transition-all cursor-pointer"
             >
               <span className="material-symbols-outlined text-[18px]">add_location_alt</span>
               <span>+ Nueva Agencia</span>
             </button>
           )}
 
-          <div className="bg-white/10 p-1 rounded-xl flex items-center border border-white/10">
+          <div className="bg-white/10 p-1 rounded-xl flex items-center border border-white/10 w-full sm:w-auto justify-around sm:justify-start">
             <button
               onClick={() => setActiveTab('split')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${activeTab === 'split' ? 'bg-white text-slate-900 shadow' : 'text-slate-300 hover:text-white'}`}
+              className={`px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${activeTab === 'split' ? 'bg-white text-slate-900 shadow' : 'text-slate-300 hover:text-white'}`}
               title="Vista Dividida (Mapa y Lista)"
             >
               <span className="material-symbols-outlined text-[16px]">view_sidebar</span>
-              <span className="hidden sm:inline">Dividida</span>
+              <span>Dividida</span>
             </button>
             <button
               onClick={() => setActiveTab('map')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${activeTab === 'map' ? 'bg-white text-slate-900 shadow' : 'text-slate-300 hover:text-white'}`}
+              className={`px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${activeTab === 'map' ? 'bg-white text-slate-900 shadow' : 'text-slate-300 hover:text-white'}`}
               title="Solo Mapa Geoespacial"
             >
               <span className="material-symbols-outlined text-[16px]">map</span>
-              <span className="hidden sm:inline">Mapa</span>
+              <span>Mapa</span>
             </button>
             <button
               onClick={() => setActiveTab('list')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${activeTab === 'list' ? 'bg-white text-slate-900 shadow' : 'text-slate-300 hover:text-white'}`}
+              className={`px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${activeTab === 'list' ? 'bg-white text-slate-900 shadow' : 'text-slate-300 hover:text-white'}`}
               title="Solo Lista de Agencias"
             >
               <span className="material-symbols-outlined text-[16px]">view_list</span>
-              <span className="hidden sm:inline">Lista</span>
+              <span>Lista</span>
             </button>
           </div>
         </div>
@@ -704,30 +704,30 @@ export default function OutsourcingManagement() {
           )}
 
           {/* Status filter pills */}
-          <div className="flex items-center gap-1.5 overflow-x-auto py-1">
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar whitespace-nowrap py-1">
             <button
               onClick={() => setStatusFilter('ALL')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${statusFilter === 'ALL' ? 'bg-primary text-white shadow-sm' : 'bg-surface-container text-on-surface hover:bg-surface-container-high'}`}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap flex-shrink-0 ${statusFilter === 'ALL' ? 'bg-primary text-white shadow-sm' : 'bg-surface-container text-on-surface hover:bg-surface-container-high'}`}
             >
               Todos ({stats.totalAgencies})
             </button>
             <button
               onClick={() => setStatusFilter('critico')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${statusFilter === 'critico' ? 'bg-rose-500 text-white shadow-sm' : 'bg-rose-50 text-rose-700 hover:bg-rose-100'}`}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1 whitespace-nowrap flex-shrink-0 ${statusFilter === 'critico' ? 'bg-rose-500 text-white shadow-sm' : 'bg-rose-50 text-rose-700 hover:bg-rose-100'}`}
             >
               <span className="w-2 h-2 rounded-full bg-rose-500" />
               Crítico ({stats.criticalCount})
             </button>
             <button
               onClick={() => setStatusFilter('alerta')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${statusFilter === 'alerta' ? 'bg-amber-500 text-white shadow-sm' : 'bg-amber-50 text-amber-700 hover:bg-amber-100'}`}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1 whitespace-nowrap flex-shrink-0 ${statusFilter === 'alerta' ? 'bg-amber-500 text-white shadow-sm' : 'bg-amber-50 text-amber-700 hover:bg-amber-100'}`}
             >
               <span className="w-2 h-2 rounded-full bg-amber-500" />
               Alerta ({stats.alertCount})
             </button>
             <button
               onClick={() => setStatusFilter('optimo')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${statusFilter === 'optimo' ? 'bg-emerald-600 text-white shadow-sm' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'}`}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1 whitespace-nowrap flex-shrink-0 ${statusFilter === 'optimo' ? 'bg-emerald-600 text-white shadow-sm' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'}`}
             >
               <span className="w-2 h-2 rounded-full bg-emerald-500" />
               Óptimo ({stats.optimalCount})
@@ -762,7 +762,7 @@ export default function OutsourcingManagement() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Map Container */}
         {(activeTab === 'split' || activeTab === 'map') && (
-          <div className={`${activeTab === 'map' ? 'lg:col-span-12' : 'lg:col-span-7'} h-[620px] bg-surface-container-lowest rounded-3xl p-3 border border-outline-variant/30 shadow-sm flex flex-col`}>
+          <div className={`${activeTab === 'map' ? 'lg:col-span-12' : 'lg:col-span-7'} h-[360px] sm:h-[480px] lg:h-[620px] bg-surface-container-lowest rounded-3xl p-3 border border-outline-variant/30 shadow-sm flex flex-col`}>
             <div className="flex items-center justify-between mb-2 px-3 pt-2">
               <div className="flex items-center gap-2">
                 <span className="material-symbols-outlined text-primary text-[20px]">explore</span>

@@ -297,7 +297,7 @@ export default function Settings() {
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-outline-variant/30 gap-2">
+      <div className="flex border-b border-outline-variant/30 gap-2 overflow-x-auto no-scrollbar whitespace-nowrap">
         {[
           { id: 'personal', label: 'Personal y Accesos', icon: 'badge' },
           { id: 'permisos', label: 'Roles y Pantallas', icon: 'key' },
@@ -310,7 +310,7 @@ export default function Settings() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`pb-4 px-4 font-bold text-[13px] flex items-center gap-1.5 border-b-2 transition-all cursor-pointer ${
+              className={`pb-4 px-3 sm:px-4 font-bold text-[12px] sm:text-[13px] flex items-center gap-1.5 border-b-2 transition-all cursor-pointer whitespace-nowrap flex-shrink-0 ${
                 isAct 
                   ? 'border-primary text-primary' 
                   : 'border-transparent text-on-surface-variant hover:text-primary'

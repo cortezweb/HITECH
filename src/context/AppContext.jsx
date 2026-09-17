@@ -849,6 +849,12 @@ export const AppProvider = ({ children }) => {
     setSubstates(prev => ({ ...prev, [pageName]: value }));
   };
 
+  // Mobile navigation drawer state
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [page]);
+
   // State arrays driven by Supabase (with offline initial mock fallbacks)
   const [products, setProducts] = useState(initialMockProducts);
   const [tickets, setTickets] = useState(initialMockTickets);
@@ -2000,7 +2006,9 @@ export const AppProvider = ({ children }) => {
       consumeAgencyToner,
       updateInventoryProduct,
       deleteInventoryProduct,
-      addUrgentTask
+      addUrgentTask,
+      isMobileMenuOpen,
+      setIsMobileMenuOpen
     }}>
       {children}
     </AppContext.Provider>

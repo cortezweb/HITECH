@@ -11,7 +11,9 @@ export default function TopBar() {
     logout,
     outsourcingAgencies = [],
     products = [],
-    tickets = []
+    tickets = [],
+    isMobileMenuOpen,
+    setIsMobileMenuOpen
   } = useApp();
 
   const [showNotifications, setShowNotifications] = useState(false);
@@ -162,35 +164,48 @@ export default function TopBar() {
   };
 
   return (
-    <header className="fixed top-0 right-0 w-[calc(100%-88px)] h-16 bg-surface-container-lowest border-b border-outline-variant/30 flex justify-between items-center px-8 z-40 print:hidden">
-      <div className="flex items-center gap-4">
-        <h1 className="text-[20px] font-black text-primary tracking-tight font-sans">{getPageTitle()}</h1>
+    <header className="fixed top-0 right-0 w-full md:w-[calc(100%-88px)] h-16 bg-surface-container-lowest border-b border-outline-variant/30 flex justify-between items-center px-3 sm:px-6 md:px-8 z-30 print:hidden">
+      <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+        {/* Mobile Hamburger Button */}
+        <button
+          type="button"
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          className="p-1.5 rounded-xl text-slate-600 hover:bg-slate-100 flex md:hidden items-center justify-center cursor-pointer"
+          title="Menú Principal"
+        >
+          <span className="material-symbols-outlined text-[24px]">menu</span>
+        </button>
+
+        <h1 className="text-sm sm:text-base md:text-[19px] font-black text-primary tracking-tight font-sans truncate">
+          {getPageTitle()}
+        </h1>
       </div>
       
-      <div className="flex items-center gap-6">
+      <div className="flex items-center gap-2 sm:gap-4 md:gap-6 flex-shrink-0">
         {/* Add New Button (Role-restricted) */}
         {showNewButton && (
           <button
             onClick={handleAddNew}
-            className="bg-primary hover:bg-primary-container text-on-primary hover:text-on-primary-container px-5 py-2 rounded-full font-sans text-[13px] font-semibold flex items-center gap-2 transition-all shadow-sm active:scale-95 cursor-pointer"
+            className="bg-primary hover:bg-primary-container text-on-primary hover:text-on-primary-container px-3 sm:px-5 py-1.5 sm:py-2 rounded-full font-sans text-xs sm:text-[13px] font-semibold flex items-center gap-1.5 transition-all shadow-sm active:scale-95 cursor-pointer"
+            title="Nuevo Registro"
           >
-            <span>Nuevo</span>
+            <span className="hidden sm:inline">Nuevo</span>
             <span className="material-symbols-outlined text-[16px]">add</span>
           </button>
         )}
 
         {/* Notifications, Connection Sync Status and Profile */}
-        <div className="flex items-center gap-4 border-l border-outline-variant/30 pl-6">
+        <div className="flex items-center gap-1.5 sm:gap-3 md:gap-4 border-l border-outline-variant/20 pl-2 sm:pl-4 md:pl-6">
           {/* Connection Status Icon */}
           <div 
-            className={`flex items-center justify-center p-2 rounded-full transition-all ${
+            className={`flex items-center justify-center p-1.5 sm:p-2 rounded-full transition-all ${
               isOnline 
                 ? 'text-emerald-500 bg-emerald-500/10' 
                 : 'text-amber-500 bg-amber-500/10'
             }`}
             title={isOnline ? "Online: Datos en la nube sincronizados" : "Offline: Trabajando localmente (datos respaldados)"}
           >
-            <span className="material-symbols-outlined text-[20px]">
+            <span className="material-symbols-outlined text-[18px] sm:text-[20px]">
               {isOnline ? 'cloud_done' : 'cloud_off'}
             </span>
           </div>
@@ -199,12 +214,12 @@ export default function TopBar() {
           <div className="relative" ref={notifRef}>
             <button 
               onClick={() => setShowNotifications(!showNotifications)}
-              className="text-on-surface-variant hover:text-primary transition-colors flex items-center p-2 rounded-full hover:bg-surface-container-high relative cursor-pointer"
+              className="text-on-surface-variant hover:text-primary transition-colors flex items-center p-1.5 sm:p-2 rounded-full hover:bg-surface-container-high relative cursor-pointer"
               title="Notificaciones y Alertas del Sistema"
             >
               <span className="material-symbols-outlined text-[20px]">notifications</span>
               {notifications.length > 0 && (
-                <span className="absolute top-1 right-1 w-4 h-4 rounded-full bg-rose-500 text-white text-[9px] font-bold flex items-center justify-center animate-pulse">
+                <span className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-rose-500 text-white text-[9px] font-bold flex items-center justify-center animate-pulse">
                   {notifications.length > 9 ? '9+' : notifications.length}
                 </span>
               )}
@@ -212,7 +227,7 @@ export default function TopBar() {
 
             {/* Notification Dropdown Panel */}
             {showNotifications && (
-              <div className="absolute right-0 mt-3 w-80 sm:w-96 bg-surface-container-lowest rounded-3xl shadow-2xl border border-outline-variant/30 py-4 px-4 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+              <div className="fixed sm:absolute left-3 right-3 sm:left-auto sm:right-0 top-16 sm:top-auto mt-2 sm:mt-3 sm:w-96 bg-surface-container-lowest rounded-3xl shadow-2xl border border-outline-variant/30 py-4 px-4 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
                 <div className="flex items-center justify-between pb-3 border-b border-outline-variant/20 mb-3">
                   <div className="flex items-center gap-2">
                     <span className="font-bold text-sm text-on-surface">Alertas del Sistema</span>

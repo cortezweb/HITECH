@@ -610,7 +610,7 @@ export default function Reports() {
       </div>
 
       {/* SUB TABS NAVIGATION */}
-      <div className="flex border-b border-outline-variant/30 gap-2 print:hidden">
+      <div className="flex border-b border-outline-variant/30 gap-2 print:hidden overflow-x-auto no-scrollbar whitespace-nowrap">
         {[
           { id: 'dashboard', label: 'Evolución y Utilidades', icon: 'insights' },
           { id: 'products', label: 'Artículos Estrella y Rotación', icon: 'star' },
@@ -621,7 +621,7 @@ export default function Reports() {
           <button
             key={t.id}
             onClick={() => setReportTab(t.id)}
-            className={`pb-3 px-4 font-bold text-[13px] flex items-center gap-1.5 border-b-2 transition-all cursor-pointer ${
+            className={`pb-3 px-3 sm:px-4 font-bold text-[12px] sm:text-[13px] flex items-center gap-1.5 border-b-2 transition-all cursor-pointer whitespace-nowrap flex-shrink-0 ${
               reportTab === t.id 
                 ? 'border-primary text-primary font-black' 
                 : 'border-transparent text-on-surface-variant hover:text-primary'

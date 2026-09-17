@@ -282,11 +282,11 @@ export default function Dashboard() {
   return (
     <div className="space-y-6">
       {/* State Switcher (for demo presentation purposes) */}
-      <div className="flex items-center gap-3 bg-surface-container-low p-3 rounded-xl border border-outline-variant/30">
-        <span className="text-[12px] font-semibold text-on-surface-variant uppercase tracking-wider">Demo States:</span>
+      <div className="flex items-center gap-2 sm:gap-3 bg-surface-container-low p-2.5 sm:p-3 rounded-xl border border-outline-variant/30 overflow-x-auto no-scrollbar whitespace-nowrap">
+        <span className="text-[11px] sm:text-[12px] font-semibold text-on-surface-variant uppercase tracking-wider flex-shrink-0">Demo States:</span>
         <button
           onClick={() => setSubstate('dashboard', 'moderno')}
-          className={`px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-all ${
+          className={`px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-all whitespace-nowrap flex-shrink-0 cursor-pointer ${
             currentSubstate === 'moderno' ? 'bg-primary text-on-primary' : 'bg-surface-container-high text-on-surface-variant hover:bg-surface-container-highest'
           }`}
         >
@@ -294,7 +294,7 @@ export default function Dashboard() {
         </button>
         <button
           onClick={() => setSubstate('dashboard', 'empty')}
-          className={`px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-all ${
+          className={`px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-all whitespace-nowrap flex-shrink-0 cursor-pointer ${
             currentSubstate === 'empty' ? 'bg-primary text-on-primary' : 'bg-surface-container-high text-on-surface-variant hover:bg-surface-container-highest'
           }`}
         >
@@ -302,7 +302,7 @@ export default function Dashboard() {
         </button>
         <button
           onClick={() => setSubstate('dashboard', 'error')}
-          className={`px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-all ${
+          className={`px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-all whitespace-nowrap flex-shrink-0 cursor-pointer ${
             currentSubstate === 'error' ? 'bg-primary text-on-primary' : 'bg-surface-container-high text-on-surface-variant hover:bg-surface-container-highest'
           }`}
         >

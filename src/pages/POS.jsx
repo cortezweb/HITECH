@@ -38,6 +38,9 @@ export default function POS() {
   const [discountValue, setDiscountValue] = useState(0);
   const [showDiscountInput, setShowDiscountInput] = useState(false);
 
+  // Mobile cart sheet state
+  const [showMobileCart, setShowMobileCart] = useState(false);
+
   // Attendance, closures and authorization modal states
   const [showAttendanceModal, setShowAttendanceModal] = useState(false);
   const [showCierreModal, setShowCierreModal] = useState(false);
@@ -581,7 +584,7 @@ export default function POS() {
                 </div>
 
                 {/* Keypad & Quick selects */}
-                <div className="flex gap-6">
+                <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
                   {/* Grid Keypad */}
                   <div className="grid grid-cols-3 gap-2 flex-1">
                     {[7, 8, 9, 4, 5, 6, 1, 2, 3].map((num) => (
@@ -614,19 +617,19 @@ export default function POS() {
                   </div>
                   
                   {/* Quick Select Panel */}
-                  <div className="w-28 flex flex-col gap-2.5">
+                  <div className="w-full sm:w-28 grid grid-cols-4 sm:flex sm:flex-col gap-2 sm:gap-2.5">
                     <button
                       onClick={() => handleSetExactCash(total)}
-                      className="flex-1 bg-primary-fixed text-primary border border-primary/20 rounded-xl text-[12px] font-bold flex flex-col items-center justify-center hover:brightness-95 active:scale-95 transition-all cursor-pointer"
+                      className="py-2.5 sm:py-0 sm:flex-1 bg-primary-fixed text-primary border border-primary/20 rounded-xl text-[12px] font-bold flex flex-col items-center justify-center hover:brightness-95 active:scale-95 transition-all cursor-pointer"
                     >
-                      <span className="text-[10px] opacity-80 uppercase leading-none mb-1">Exacto</span>
+                      <span className="text-[10px] opacity-80 uppercase leading-none mb-0.5">Exacto</span>
                       <span className="font-bold">${total.toFixed(2)}</span>
                     </button>
                     {[Math.ceil(total / 10) * 10, Math.ceil(total / 50) * 50, Math.ceil(total / 100) * 100].map((val) => (
                       <button
                         key={val}
                         onClick={() => handleSetExactCash(val)}
-                        className="flex-1 bg-surface-container-high text-on-surface rounded-xl font-bold text-[14px] hover:bg-surface-container-highest active:scale-95 transition-all cursor-pointer"
+                        className="py-2.5 sm:py-0 sm:flex-1 bg-surface-container-high text-on-surface rounded-xl font-bold text-[14px] hover:bg-surface-container-highest active:scale-95 transition-all cursor-pointer flex items-center justify-center"
                       >
                         ${val}
                       </button>
@@ -1233,9 +1236,9 @@ export default function POS() {
 
   // Modern / Search views
   return (
-    <div className="flex-1 flex overflow-hidden -m-8 h-[calc(100vh-64px)]">
+    <div className="flex-1 flex flex-col lg:flex-row overflow-hidden -m-3 sm:-m-4 md:-m-8 h-[calc(100vh-64px)] relative">
       {/* Left Pane: Product Selection */}
-      <div className="flex-1 overflow-y-auto p-8 scroll-smooth text-left">
+      <div className="flex-1 overflow-y-auto p-3.5 sm:p-6 md:p-8 scroll-smooth text-left pb-36 lg:pb-8">
         <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h1 className="text-[24px] font-bold text-on-surface">
@@ -1431,8 +1434,8 @@ export default function POS() {
         )}
       </div>
 
-      {/* Right Pane: Cart Sidebar */}
-      <aside className="w-[380px] bg-white border-l border-outline-variant/30 flex flex-col shadow-[-10px_0px_30px_rgba(0,0,0,0.01)] text-left">
+      {/* Right Pane: Cart Sidebar (Desktop only) */}
+      <aside className="w-[380px] bg-white border-l border-outline-variant/30 hidden lg:flex flex-col shadow-[-10px_0px_30px_rgba(0,0,0,0.01)] text-left">
         <div className="p-6 border-b border-outline-variant/30 flex items-center justify-between">
           <h2 className="text-[16px] font-bold text-on-surface">Carrito de Compras</h2>
           <span className="bg-primary/10 text-primary px-3 py-1 rounded-full text-[12px] font-bold">
@@ -1576,6 +1579,154 @@ export default function POS() {
           </div>
         </div>
       </aside>
+
+      {/* Mobile Floating Cart Summary Bar */}
+      <div className="fixed bottom-16 left-0 right-0 p-3 bg-surface-container-lowest/95 backdrop-blur-lg border-t border-outline-variant/30 lg:hidden z-30 shadow-xl flex items-center justify-between gap-3">
+        <div 
+          onClick={() => setShowMobileCart(true)}
+          className="flex items-center gap-2.5 cursor-pointer flex-1 min-w-0"
+        >
+          <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold relative flex-shrink-0">
+            <span className="material-symbols-outlined text-[20px]">shopping_cart</span>
+            {cart.length > 0 && (
+              <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-primary text-white text-[9px] font-bold flex items-center justify-center">
+                {cart.reduce((a, b) => a + b.qty, 0)}
+              </span>
+            )}
+          </div>
+          <div className="text-left leading-tight truncate">
+            <p className="text-[10px] uppercase font-bold text-slate-400">Total a Cobrar</p>
+            <p className="text-base font-black text-slate-900 truncate">${total.toFixed(2)}</p>
+          </div>
+        </div>
+        
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <button
+            type="button"
+            onClick={() => setShowMobileCart(true)}
+            className="px-3 py-2 bg-surface-container hover:bg-surface-container-high text-slate-700 rounded-xl font-bold text-xs flex items-center gap-1 cursor-pointer border border-outline-variant/20"
+          >
+            <span className="material-symbols-outlined text-[16px]">visibility</span>
+            <span>Carrito</span>
+          </button>
+          <button
+            type="button"
+            disabled={cart.length === 0}
+            onClick={() => setSubstate('pos', 'payment')}
+            className="px-4 py-2 bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:pointer-events-none text-white rounded-xl font-bold text-xs flex items-center gap-1 cursor-pointer shadow-md shadow-primary/20"
+          >
+            <span>Cobrar</span>
+            <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile Slide-up Cart Sheet */}
+      {showMobileCart && (
+        <div className="fixed inset-0 z-50 lg:hidden flex flex-col justify-end bg-black/60 backdrop-blur-xs">
+          <div 
+            onClick={() => setShowMobileCart(false)} 
+            className="fixed inset-0"
+          />
+          <div className="relative bg-white rounded-t-3xl max-h-[85vh] flex flex-col shadow-2xl animate-in slide-in-from-bottom duration-250 text-left z-10">
+            <div className="p-4 border-b border-outline-variant/20 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-primary text-[22px]">shopping_cart</span>
+                <h3 className="font-bold text-base text-on-surface">
+                  Carrito de Compras ({cart.reduce((a, b) => a + b.qty, 0)})
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowMobileCart(false)}
+                className="p-1.5 rounded-full hover:bg-slate-100 text-slate-500 cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[22px]">close</span>
+              </button>
+            </div>
+
+            {/* Items list in mobile sheet */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-3 max-h-[45vh]">
+              {cart.length === 0 ? (
+                <div className="py-10 text-center text-slate-400 space-y-2">
+                  <span className="material-symbols-outlined text-4xl opacity-40">shopping_basket</span>
+                  <p className="text-xs">El carrito está vacío</p>
+                </div>
+              ) : (
+                cart.map((item) => (
+                  <div key={item.id} className="flex gap-3 items-center py-2 border-b border-slate-100 last:border-0">
+                    <div className="w-12 h-12 rounded-xl bg-surface-container-low p-1 flex-shrink-0 flex items-center justify-center">
+                      <img className="w-full h-full object-contain" alt={item.name} src={item.image} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-bold text-on-surface truncate">{item.name}</p>
+                      <p className="text-[11px] text-slate-500">${item.price.toFixed(2)} c/u</p>
+                    </div>
+                    <div className="flex items-center bg-slate-100 rounded-lg">
+                      <button
+                        onClick={() => updateCartQty(item.id, item.qty - 1)}
+                        className="p-1 text-slate-600 hover:text-primary cursor-pointer"
+                      >
+                        <span className="material-symbols-outlined text-[16px]">remove</span>
+                      </button>
+                      <span className="px-2 text-xs font-bold text-slate-900">{item.qty}</span>
+                      <button
+                        onClick={() => updateCartQty(item.id, item.qty + 1)}
+                        className="p-1 text-slate-600 hover:text-primary cursor-pointer"
+                      >
+                        <span className="material-symbols-outlined text-[16px]">add</span>
+                      </button>
+                    </div>
+                    <span className="text-xs font-black text-primary w-14 text-right">
+                      ${(item.price * item.qty).toFixed(2)}
+                    </span>
+                    <button
+                      onClick={() => removeFromCart(item.id)}
+                      className="p-1 text-rose-400 hover:text-rose-600 cursor-pointer"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">delete</span>
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* Bottom summary in mobile sheet */}
+            <div className="p-4 bg-surface-container-low border-t border-outline-variant/20 space-y-2.5">
+              <div className="flex justify-between text-xs text-slate-600">
+                <span>Subtotal</span>
+                <span className="font-bold text-slate-900">${subtotal.toFixed(2)}</span>
+              </div>
+              {discountAmount > 0 && (
+                <div className="flex justify-between text-xs text-emerald-600 font-bold">
+                  <span>Descuento</span>
+                  <span>-${discountAmount.toFixed(2)}</span>
+                </div>
+              )}
+              <div className="flex justify-between text-xs text-slate-600">
+                <span>Impuesto (8%)</span>
+                <span className="font-bold text-slate-900">${tax.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between items-center pt-2 border-t border-slate-200">
+                <span className="font-bold text-sm text-slate-800">Total a Pagar</span>
+                <span className="font-black text-xl text-primary">${total.toFixed(2)}</span>
+              </div>
+              <button
+                type="button"
+                disabled={cart.length === 0}
+                onClick={() => {
+                  setShowMobileCart(false);
+                  setSubstate('pos', 'payment');
+                }}
+                className="w-full py-3.5 bg-primary hover:bg-primary/90 disabled:opacity-50 text-white rounded-xl font-bold text-sm shadow-md shadow-primary/25 flex items-center justify-center gap-2 cursor-pointer mt-1"
+              >
+                <span className="material-symbols-outlined text-[18px]">payments</span>
+                <span>Proceder al Pago (${total.toFixed(2)})</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
         {/* Printable Cierre Z Layout */}
         {cierreReport && (
