@@ -57,6 +57,9 @@ export default function Dashboard() {
   const [isNewTaskModalOpen, setIsNewTaskModalOpen] = React.useState(false);
   const [newTaskDesc, setNewTaskDesc] = React.useState('');
   const [newTaskIsUrgent, setNewTaskIsUrgent] = React.useState(false);
+  const [showDemoBar, setShowDemoBar] = React.useState(() => {
+    return localStorage.getItem('sistech_hide_demo_dashboard') !== 'true';
+  });
 
   React.useEffect(() => {
     const timer = setInterval(() => {
@@ -282,33 +285,47 @@ export default function Dashboard() {
   return (
     <div className="space-y-6">
       {/* State Switcher (for demo presentation purposes) */}
-      <div className="flex items-center gap-2 sm:gap-3 bg-surface-container-low p-2.5 sm:p-3 rounded-xl border border-outline-variant/30 overflow-x-auto no-scrollbar whitespace-nowrap">
-        <span className="text-[11px] sm:text-[12px] font-semibold text-on-surface-variant uppercase tracking-wider flex-shrink-0">Demo States:</span>
-        <button
-          onClick={() => setSubstate('dashboard', 'moderno')}
-          className={`px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-all whitespace-nowrap flex-shrink-0 cursor-pointer ${
-            currentSubstate === 'moderno' ? 'bg-primary text-on-primary' : 'bg-surface-container-high text-on-surface-variant hover:bg-surface-container-highest'
-          }`}
-        >
-          Moderno (Con Datos)
-        </button>
-        <button
-          onClick={() => setSubstate('dashboard', 'empty')}
-          className={`px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-all whitespace-nowrap flex-shrink-0 cursor-pointer ${
-            currentSubstate === 'empty' ? 'bg-primary text-on-primary' : 'bg-surface-container-high text-on-surface-variant hover:bg-surface-container-highest'
-          }`}
-        >
-          Estado Vacío
-        </button>
-        <button
-          onClick={() => setSubstate('dashboard', 'error')}
-          className={`px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-all whitespace-nowrap flex-shrink-0 cursor-pointer ${
-            currentSubstate === 'error' ? 'bg-primary text-on-primary' : 'bg-surface-container-high text-on-surface-variant hover:bg-surface-container-highest'
-          }`}
-        >
-          Error de Carga
-        </button>
-      </div>
+      {showDemoBar && (
+        <div className="flex items-center justify-between gap-2 sm:gap-3 bg-surface-container-low p-2.5 sm:p-3 rounded-xl border border-outline-variant/30 overflow-x-auto no-scrollbar whitespace-nowrap">
+          <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+            <span className="text-[11px] sm:text-[12px] font-semibold text-on-surface-variant uppercase tracking-wider flex-shrink-0">Modos de Vista:</span>
+            <button
+              onClick={() => setSubstate('dashboard', 'moderno')}
+              className={`px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-all whitespace-nowrap flex-shrink-0 cursor-pointer ${
+                currentSubstate === 'moderno' ? 'bg-primary text-on-primary' : 'bg-surface-container-high text-on-surface-variant hover:bg-surface-container-highest'
+              }`}
+            >
+              Moderno (Con Datos)
+            </button>
+            <button
+              onClick={() => setSubstate('dashboard', 'empty')}
+              className={`px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-all whitespace-nowrap flex-shrink-0 cursor-pointer ${
+                currentSubstate === 'empty' ? 'bg-primary text-on-primary' : 'bg-surface-container-high text-on-surface-variant hover:bg-surface-container-highest'
+              }`}
+            >
+              Estado Vacío
+            </button>
+            <button
+              onClick={() => setSubstate('dashboard', 'error')}
+              className={`px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-all whitespace-nowrap flex-shrink-0 cursor-pointer ${
+                currentSubstate === 'error' ? 'bg-primary text-on-primary' : 'bg-surface-container-high text-on-surface-variant hover:bg-surface-container-highest'
+              }`}
+            >
+              Error de Carga
+            </button>
+          </div>
+          <button
+            onClick={() => {
+              setShowDemoBar(false);
+              localStorage.setItem('sistech_hide_demo_dashboard', 'true');
+            }}
+            className="text-slate-400 hover:text-slate-700 p-1 rounded-lg hover:bg-surface-container-high transition-colors cursor-pointer flex-shrink-0 ml-auto"
+            title="Ocultar barra de demostración"
+          >
+            <span className="material-symbols-outlined text-[18px]">close</span>
+          </button>
+        </div>
+      )}
 
       {/* Banner de Bienvenida, Hora y Clima */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 bg-gradient-to-r from-primary-container/20 via-surface-container-lowest to-secondary-container/10 p-6 rounded-[24px] border border-outline-variant/20 shadow-sm items-center text-left">

@@ -72,6 +72,9 @@ export default function Inventory() {
 
   const currentSubstate = substates.inventory;
   const isEmptyState = currentSubstate === 'empty';
+  const [showDemoBar, setShowDemoBar] = useState(() => {
+    return localStorage.getItem('sistech_hide_demo_inventory') !== 'true';
+  });
 
   // Calculations
   const displayProducts = isEmptyState 
@@ -149,25 +152,39 @@ export default function Inventory() {
   return (
     <div className="space-y-6 relative">
       {/* Demo States Switcher */}
-      <div className="flex items-center gap-3 bg-surface-container-low p-3 rounded-xl border border-outline-variant/30">
-        <span className="text-[12px] font-semibold text-on-surface-variant uppercase tracking-wider">Demo States:</span>
-        <button
-          onClick={() => setSubstate('inventory', 'moderno')}
-          className={`px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-all ${
-            currentSubstate === 'moderno' ? 'bg-primary text-on-primary' : 'bg-surface-container-high text-on-surface-variant hover:bg-surface-container-highest'
-          }`}
-        >
-          Registro General (Moderno)
-        </button>
-        <button
-          onClick={() => setSubstate('inventory', 'empty')}
-          className={`px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-all ${
-            currentSubstate === 'empty' ? 'bg-primary text-on-primary' : 'bg-surface-container-high text-on-surface-variant hover:bg-surface-container-highest'
-          }`}
-        >
-          Estado Vacío
-        </button>
-      </div>
+      {showDemoBar && (
+        <div className="flex items-center justify-between gap-3 bg-surface-container-low p-3 rounded-xl border border-outline-variant/30 overflow-x-auto no-scrollbar whitespace-nowrap">
+          <div className="flex items-center gap-3 flex-shrink-0">
+            <span className="text-[12px] font-semibold text-on-surface-variant uppercase tracking-wider flex-shrink-0">Modos de Vista:</span>
+            <button
+              onClick={() => setSubstate('inventory', 'moderno')}
+              className={`px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-all whitespace-nowrap flex-shrink-0 cursor-pointer ${
+                currentSubstate === 'moderno' ? 'bg-primary text-on-primary' : 'bg-surface-container-high text-on-surface-variant hover:bg-surface-container-highest'
+              }`}
+            >
+              Registro General (Moderno)
+            </button>
+            <button
+              onClick={() => setSubstate('inventory', 'empty')}
+              className={`px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-all whitespace-nowrap flex-shrink-0 cursor-pointer ${
+                currentSubstate === 'empty' ? 'bg-primary text-on-primary' : 'bg-surface-container-high text-on-surface-variant hover:bg-surface-container-highest'
+              }`}
+            >
+              Estado Vacío
+            </button>
+          </div>
+          <button
+            onClick={() => {
+              setShowDemoBar(false);
+              localStorage.setItem('sistech_hide_demo_inventory', 'true');
+            }}
+            className="text-slate-400 hover:text-slate-700 p-1 rounded-lg hover:bg-surface-container-high transition-colors cursor-pointer flex-shrink-0 ml-auto"
+            title="Ocultar barra de demostración"
+          >
+            <span className="material-symbols-outlined text-[18px]">close</span>
+          </button>
+        </div>
+      )}
 
       {/* Overview Stats Cards */}
       <section className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">

@@ -981,16 +981,29 @@ export const AppProvider = ({ children }) => {
   const [lastClosingTimestamp, setLastClosingTimestamp] = useState(0);
 
   // Connection status hooks
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [isOnline, setIsOnline] = useState(() => Boolean(isSupabaseConfigured && supabase && navigator.onLine));
 
   useEffect(() => {
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
+    let mounted = true;
+    const checkConnection = async () => {
+      if (!isSupabaseConfigured || !supabase || !navigator.onLine) {
+        if (mounted) setIsOnline(false);
+        return;
+      }
+      try {
+        const { error } = await supabase.from('users').select('id').limit(1);
+        if (mounted) setIsOnline(!error);
+      } catch {
+        if (mounted) setIsOnline(false);
+      }
+    };
+    checkConnection();
+    window.addEventListener('online', checkConnection);
+    window.addEventListener('offline', () => setIsOnline(false));
     return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
+      mounted = false;
+      window.removeEventListener('online', checkConnection);
+      window.removeEventListener('offline', () => setIsOnline(false));
     };
   }, []);
 
@@ -1320,11 +1333,14 @@ export const AppProvider = ({ children }) => {
             setOutsourcingAgencies(agencies.map(mapAgencyFromDb));
           } else {
             const localAg = JSON.parse(localStorage.getItem('sistech_outsourcing_agencies') || '[]');
-            if (localAg.length > 0) {
-              localAg.forEach(a => supabase.from('outsourcing_agencies').upsert(mapAgencyToDb(a)).catch(console.warn));
-            } else {
-              initialMockOutsourcingAgencies.forEach(a => supabase.from('outsourcing_agencies').upsert(mapAgencyToDb(a)).catch(console.warn));
-              setOutsourcingAgencies(initialMockOutsourcingAgencies);
+            const toSeed = localAg.length > 0 ? localAg : initialMockOutsourcingAgencies;
+            setOutsourcingAgencies(toSeed);
+            if (isSupabaseConfigured && supabase) {
+              toSeed.forEach(a => {
+                supabase.from('outsourcing_agencies').upsert(mapAgencyToDb(a)).then(({ error }) => {
+                  if (error) console.error('Error auto-seeding agency in Supabase:', error);
+                });
+              });
             }
           }
         } else if (agenciesErr) {
@@ -1336,11 +1352,14 @@ export const AppProvider = ({ children }) => {
             setOutsourcingClients(clients.map(mapClientFromDb));
           } else {
             const localCl = JSON.parse(localStorage.getItem('sistech_outsourcing_clients') || '[]');
-            if (localCl.length > 0) {
-              localCl.forEach(c => supabase.from('outsourcing_clients').upsert(mapClientToDb(c)).catch(console.warn));
-            } else {
-              initialMockOutsourcingClients.forEach(c => supabase.from('outsourcing_clients').upsert(mapClientToDb(c)).catch(console.warn));
-              setOutsourcingClients(initialMockOutsourcingClients);
+            const toSeed = localCl.length > 0 ? localCl : initialMockOutsourcingClients;
+            setOutsourcingClients(toSeed);
+            if (isSupabaseConfigured && supabase) {
+              toSeed.forEach(c => {
+                supabase.from('outsourcing_clients').upsert(mapClientToDb(c)).then(({ error }) => {
+                  if (error) console.error('Error auto-seeding client in Supabase:', error);
+                });
+              });
             }
           }
         } else if (clientsErr) {
@@ -1832,10 +1851,16 @@ export const AppProvider = ({ children }) => {
   };
 
   const addOutsourcingAgency = async (agencyData) => {
-    if (isSupabaseConfigured && supabase) {
-      supabase.from('outsourcing_agencies').insert(mapAgencyToDb(agencyData)).catch(console.warn);
-    }
     setOutsourcingAgencies(prev => [agencyData, ...prev]);
+
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const { error } = await supabase.from('outsourcing_agencies').upsert(mapAgencyToDb(agencyData));
+        if (error) console.error('Error al guardar agencia en Supabase:', error);
+      } catch (err) {
+        console.error('Error al guardar agencia en Supabase:', err);
+      }
+    }
     logActivity('Nueva Agencia', `Se registró la sucursal ${agencyData.agencyName} para ${agencyData.clientName}.`);
   };
 
@@ -1849,7 +1874,12 @@ export const AppProvider = ({ children }) => {
       return a;
     }));
     if (isSupabaseConfigured && supabase && updatedAgencyObj) {
-      supabase.from('outsourcing_agencies').upsert(mapAgencyToDb(updatedAgencyObj)).catch(console.warn);
+      try {
+        const { error } = await supabase.from('outsourcing_agencies').upsert(mapAgencyToDb(updatedAgencyObj));
+        if (error) console.error('Error al actualizar agencia en Supabase:', error);
+      } catch (err) {
+        console.error('Error al actualizar agencia en Supabase:', err);
+      }
     }
     logActivity('Modificar Sucursal', `Se modificaron los datos de la sucursal ${fields.agencyName || agencyId}.`);
     return updatedAgencyObj;
@@ -1857,10 +1887,15 @@ export const AppProvider = ({ children }) => {
 
   const deleteAgency = async (agencyId) => {
     const target = outsourcingAgencies.find(a => a.id === agencyId);
-    if (isSupabaseConfigured && supabase) {
-      supabase.from('outsourcing_agencies').delete().eq('id', agencyId).catch(console.warn);
-    }
     setOutsourcingAgencies(prev => prev.filter(a => a.id !== agencyId));
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const { error } = await supabase.from('outsourcing_agencies').delete().eq('id', agencyId);
+        if (error) console.error('Error al eliminar agencia en Supabase:', error);
+      } catch (err) {
+        console.error('Error al eliminar agencia en Supabase:', err);
+      }
+    }
     logActivity('Eliminar Sucursal', `Se eliminó la sucursal ${target ? target.agencyName : agencyId}.`);
   };
 
@@ -1882,10 +1917,16 @@ export const AppProvider = ({ children }) => {
       created_at: new Date().toISOString()
     };
 
-    if (isSupabaseConfigured && supabase) {
-      supabase.from('outsourcing_clients').insert(mapClientToDb(newClient)).catch(console.warn);
-    }
     setOutsourcingClients(prev => [...prev, newClient]);
+
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const { error } = await supabase.from('outsourcing_clients').upsert(mapClientToDb(newClient));
+        if (error) console.error('Error al guardar cliente en Supabase:', error);
+      } catch (err) {
+        console.error('Error al guardar cliente en Supabase:', err);
+      }
+    }
     logActivity('Crear Cliente Outsourcing', `Se registró el cliente corporativo ${newClient.name} (${newClient.code}).`);
     return newClient;
   };
@@ -1912,7 +1953,12 @@ export const AppProvider = ({ children }) => {
     });
 
     if (isSupabaseConfigured && supabase && targetClient) {
-      supabase.from('outsourcing_clients').upsert(mapClientToDb(targetClient)).catch(console.warn);
+      try {
+        const { error } = await supabase.from('outsourcing_clients').upsert(mapClientToDb(targetClient));
+        if (error) console.error('Error al actualizar cliente en Supabase:', error);
+      } catch (err) {
+        console.error('Error al actualizar cliente en Supabase:', err);
+      }
     }
 
     // Cascade update to all agencies belonging to this client!
@@ -1943,11 +1989,20 @@ export const AppProvider = ({ children }) => {
       
       setOutsourcingAgencies(prev => prev.filter(a => a.clientId !== clientId));
       if (isSupabaseConfigured && supabase) {
-        supabase.from('outsourcing_agencies').delete().eq('clientid', clientId).catch(console.warn);
+        try {
+          await supabase.from('outsourcing_agencies').delete().eq('clientid', clientId);
+        } catch (err) {
+          console.error('Error al eliminar agencias en Supabase:', err);
+        }
       }
     }
+    setOutsourcingClients(prev => prev.filter(c => c.id !== clientId));
     if (isSupabaseConfigured && supabase) {
-      supabase.from('outsourcing_clients').delete().eq('id', clientId).catch(console.warn);
+      try {
+        await supabase.from('outsourcing_clients').delete().eq('id', clientId);
+      } catch (err) {
+        console.error('Error al eliminar cliente en Supabase:', err);
+      }
     }
     setOutsourcingClients(prev => prev.filter(c => c.id !== clientId));
     logActivity('Eliminar Cliente Outsourcing', `Se eliminó el cliente corporativo ${target ? target.name : clientId}.`);

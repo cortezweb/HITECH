@@ -54,15 +54,18 @@ function AppContent() {
       {/* Sidebar Navigation */}
       <Sidebar />
 
-      {/* Top Application Bar */}
-      <TopBar />
+      {/* Main Content Area with Header */}
+      <div className="ml-0 md:ml-[88px] flex flex-col min-h-screen transition-all duration-300 print:ml-0">
+        {/* Top Application Bar */}
+        <TopBar />
 
-      {/* Main Application Container */}
-      <main className="ml-0 md:ml-[88px] pt-16 min-h-screen p-3 sm:p-4 md:p-8 pb-24 md:pb-8 transition-all duration-300 print:ml-0 print:p-0 print:pt-0">
-        <div className="max-w-[1440px] mx-auto print:max-w-none">
-          {renderActivePage()}
-        </div>
-      </main>
+        {/* Main Application Container */}
+        <main className="flex-1 p-3 sm:p-4 md:p-8 pb-24 md:pb-8 print:p-0 print:pt-0">
+          <div className="max-w-[1440px] mx-auto w-full print:max-w-none">
+            {renderActivePage()}
+          </div>
+        </main>
+      </div>
 
       {/* Contextual FAB (Trigger service registration quick access) */}
       {page !== 'service_registry' && (

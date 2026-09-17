@@ -164,7 +164,7 @@ export default function TopBar() {
   };
 
   return (
-    <header className="fixed top-0 right-0 w-full md:w-[calc(100%-88px)] h-16 bg-surface-container-lowest border-b border-outline-variant/30 flex justify-between items-center px-3 sm:px-6 md:px-8 z-30 print:hidden">
+    <header className="sticky top-0 w-full h-16 bg-surface-container-lowest/95 backdrop-blur-md border-b border-outline-variant/30 flex justify-between items-center px-3 sm:px-6 md:px-8 z-30 print:hidden">
       <div className="flex items-center gap-2 sm:gap-4 min-w-0">
         {/* Mobile Hamburger Button */}
         <button
