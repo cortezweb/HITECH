@@ -197,12 +197,12 @@ export default function OutsourcingMap({
   }, [agencies, selectedAgencyId, filterClient, onSelectAgency]);
 
   return (
-    <div className="relative w-full h-full min-h-[420px] rounded-2xl overflow-hidden shadow-inner border border-outline-variant/30">
+    <div className="relative isolate z-0 w-full h-full min-h-[420px] rounded-2xl overflow-hidden shadow-inner border border-outline-variant/30">
       {/* Map Element */}
       <div ref={mapContainerRef} className="w-full h-full min-h-[420px] z-0" />
 
       {/* Floating Legend / Quick Overview */}
-      <div className="absolute top-4 right-4 z-[400] bg-surface-container-lowest/90 backdrop-blur-md p-3 rounded-2xl shadow-lg border border-outline-variant/20 flex flex-col gap-1.5 text-[11px] max-w-[210px]">
+      <div className="absolute top-4 right-4 z-10 bg-surface-container-lowest/90 backdrop-blur-md p-3 rounded-2xl shadow-lg border border-outline-variant/20 flex flex-col gap-1.5 text-[11px] max-w-[210px]">
         <div className="font-bold text-on-surface text-xs mb-1 flex items-center gap-1.5">
           <span className="material-symbols-outlined text-primary text-[18px]">layers</span>
           Semáforo de Backup

@@ -4,8 +4,8 @@ export default function OutsourcingDeliveryReceipt({ deliveryData, agency, shopI
   if (!deliveryData || !agency) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto print:p-0 print:bg-white print:static">
-      <div className="bg-white text-slate-900 w-full max-w-[800px] rounded-2xl shadow-2xl p-8 border border-slate-200 print:shadow-none print:border-none print:p-0 print:max-w-none">
+    <div className="fixed inset-0 z-[1000] bg-black/70 backdrop-blur-sm overflow-y-auto p-4 sm:p-6 flex justify-center items-start print:p-0 print:bg-white print:static">
+      <div className="bg-white text-slate-900 w-full max-w-[800px] rounded-2xl shadow-2xl p-8 border border-slate-200 my-6 print:my-0 print:shadow-none print:border-none print:p-0 print:max-w-none">
         
         {/* Actions bar (Hidden in print) */}
         <div className="flex items-center justify-between pb-4 mb-6 border-b border-slate-200 print:hidden">

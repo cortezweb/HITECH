@@ -1268,8 +1268,8 @@ export default function OutsourcingManagement() {
 
       {/* Modal: Registrar Cambio / Instalación de Tóner / Insumo */}
       {isInstallModalOpen && selectedAgency && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-surface-container-lowest rounded-3xl p-6 w-full max-w-lg shadow-2xl border border-outline-variant/30">
+        <div className="fixed inset-0 z-[1000] bg-black/70 backdrop-blur-sm overflow-y-auto p-4 flex justify-center items-start sm:items-center">
+          <div className="bg-surface-container-lowest rounded-3xl p-6 w-full max-w-lg shadow-2xl border border-outline-variant/30 my-6">
             <div className="flex items-center justify-between pb-4 mb-4 border-b border-outline-variant/20">
               <div className="flex items-center gap-2">
                 <div className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center">
@@ -1465,8 +1465,8 @@ export default function OutsourcingManagement() {
 
       {/* Modal: Registrar Entrega de Tóners / Suministros */}
       {isDeliveryModalOpen && selectedAgency && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-surface-container-lowest rounded-3xl p-6 w-full max-w-lg shadow-2xl border border-outline-variant/30">
+        <div className="fixed inset-0 z-[1000] bg-black/70 backdrop-blur-sm overflow-y-auto p-4 flex justify-center items-start sm:items-center">
+          <div className="bg-surface-container-lowest rounded-3xl p-6 w-full max-w-lg shadow-2xl border border-outline-variant/30 my-6">
             <div className="flex items-center justify-between pb-4 mb-4 border-b border-outline-variant/20">
               <div className="flex items-center gap-2">
                 <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
@@ -1624,8 +1624,8 @@ export default function OutsourcingManagement() {
 
       {/* Modal: Nueva Agencia / Sucursal */}
       {isNewAgencyModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-surface-container-lowest rounded-3xl p-6 w-full max-w-xl shadow-2xl border border-outline-variant/30 my-8">
+        <div className="fixed inset-0 z-[1000] bg-black/70 backdrop-blur-sm overflow-y-auto p-4 sm:p-6 flex justify-center items-start">
+          <div className="bg-surface-container-lowest rounded-3xl p-6 w-full max-w-3xl shadow-2xl border border-outline-variant/30 my-6">
             <div className="flex items-center justify-between pb-4 mb-4 border-b border-outline-variant/20">
               <div className="flex items-center gap-2">
                 <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
@@ -1723,6 +1723,7 @@ export default function OutsourcingManagement() {
                 lng={parseFloat(newAgencyForm.lng) || -64.7339}
                 agencyName={newAgencyForm.agencyName}
                 city={newAgencyForm.city}
+                address={newAgencyForm.address}
                 onChange={(newLat, newLng) => {
                   setNewAgencyForm(prev => ({
                     ...prev,
@@ -1930,8 +1931,8 @@ export default function OutsourcingManagement() {
 
       {/* Client Management Modal */}
       {isClientsModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-surface-container-lowest rounded-3xl p-6 w-full max-w-3xl shadow-2xl border border-outline-variant/30 my-8">
+        <div className="fixed inset-0 z-[1000] bg-black/70 backdrop-blur-sm overflow-y-auto p-4 sm:p-6 flex justify-center items-start">
+          <div className="bg-surface-container-lowest rounded-3xl p-6 w-full max-w-3xl shadow-2xl border border-outline-variant/30 my-6">
             <div className="flex items-center justify-between pb-4 mb-4 border-b border-outline-variant/20">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
@@ -2237,8 +2238,8 @@ export default function OutsourcingManagement() {
 
       {/* Edit Client Modal */}
       {isEditClientModalOpen && (
-        <div className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-surface-container-lowest rounded-3xl p-6 w-full max-w-xl shadow-2xl border border-outline-variant/30 my-8">
+        <div className="fixed inset-0 z-[1000] bg-black/70 backdrop-blur-sm overflow-y-auto p-4 sm:p-6 flex justify-center items-start">
+          <div className="bg-surface-container-lowest rounded-3xl p-6 w-full max-w-xl shadow-2xl border border-outline-variant/30 my-6">
             <div className="flex items-center justify-between pb-4 mb-4 border-b border-outline-variant/20">
               <div className="flex items-center gap-2">
                 <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
@@ -2391,8 +2392,8 @@ export default function OutsourcingManagement() {
 
       {/* Edit Agency Modal */}
       {isEditAgencyModalOpen && editAgencyForm && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-surface-container-lowest rounded-3xl p-6 w-full max-w-3xl shadow-2xl border border-outline-variant/30 my-8">
+        <div className="fixed inset-0 z-[1000] bg-black/70 backdrop-blur-sm overflow-y-auto p-4 sm:p-6 flex justify-center items-start">
+          <div className="bg-surface-container-lowest rounded-3xl p-6 w-full max-w-3xl shadow-2xl border border-outline-variant/30 my-6">
             <div className="flex items-center justify-between pb-4 mb-4 border-b border-outline-variant/20">
               <div className="flex items-center gap-2">
                 <div className="w-9 h-9 rounded-xl bg-slate-800 text-white flex items-center justify-center">
@@ -2476,6 +2477,7 @@ export default function OutsourcingManagement() {
                 lng={parseFloat(editAgencyForm.lng) || -64.7339}
                 agencyName={editAgencyForm.agencyName}
                 city={editAgencyForm.city}
+                address={editAgencyForm.address}
                 onChange={(newLat, newLng) => {
                   setEditAgencyForm(prev => ({
                     ...prev,
