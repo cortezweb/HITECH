@@ -935,12 +935,28 @@ export const AppProvider = ({ children }) => {
   }, [outsourcingAgencies]);
 
   // Custom Settings, Users and Audit states
-  const [users, setUsers] = useState([
-    { id: 'usr-1', email: 'admin@sistech.com', password: 'admin123', name: 'Alex Sterling', role: 'admin', status: 'active', avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80', date: '24/06/2026' },
-    { id: 'usr-2', email: 'cajero@sistech.com', password: 'cajero123', name: 'Hamilton Cortez', role: 'cajero', status: 'active', avatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=80&q=80', date: '24/06/2026' },
-    { id: 'usr-3', email: 'tecnico@sistech.com', password: 'tecnico123', name: 'Ing. Milton Berthy Choque Canaviri', role: 'tecnico', status: 'active', avatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=80&q=80', date: '24/06/2026' },
-    { id: 'usr-4', email: 'banco.union@outsourcing.com', password: 'banco123', name: 'Supervisión Banco Unión', role: 'cliente_outsourcing', clientId: 'CLI-BANCO-UNION', status: 'active', avatar: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=80&q=80', date: '14/09/2026' }
-  ]);
+  const [users, setUsers] = useState(() => {
+    try {
+      const saved = localStorage.getItem('sistech_users');
+      if (saved !== null) return JSON.parse(saved);
+    } catch (e) {
+      console.warn('Error reading users from localStorage:', e);
+    }
+    return [
+      { id: 'usr-1', email: 'admin@sistech.com', password: 'admin123', name: 'Alex Sterling', role: 'admin', status: 'active', avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&q=80', date: '24/06/2026' },
+      { id: 'usr-2', email: 'cajero@sistech.com', password: 'cajero123', name: 'Hamilton Cortez', role: 'cajero', status: 'active', avatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=80&q=80', date: '24/06/2026' },
+      { id: 'usr-3', email: 'tecnico@sistech.com', password: 'tecnico123', name: 'Ing. Milton Berthy Choque Canaviri', role: 'tecnico', status: 'active', avatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?auto=format&fit=crop&w=80&q=80', date: '24/06/2026' },
+      { id: 'usr-4', email: 'banco.union@outsourcing.com', password: 'banco123', name: 'Supervisión Banco Unión', role: 'cliente_outsourcing', clientId: 'CLI-BANCO-UNION', status: 'active', avatar: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=80&q=80', date: '14/09/2026' }
+    ];
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('sistech_users', JSON.stringify(users));
+    } catch (e) {
+      console.warn('Error saving users to localStorage:', e);
+    }
+  }, [users]);
   const [rolePermissions, setRolePermissions] = useState({
     admin: ['dashboard', 'outsourcing', 'service_registry', 'pos', 'inventory', 'reports', 'settings'],
     cajero: ['dashboard', 'pos'],
